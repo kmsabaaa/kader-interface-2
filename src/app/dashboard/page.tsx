@@ -82,7 +82,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white font-sans flex selection:bg-amber-500/30 cursor-none">
+    <div className="min-h-screen bg-[#030303] text-white font-sans flex selection:bg-amber-500/30">
       
       {/* SIDEBAR - Fixed visibility */}
       <aside className="w-64 border-r border-white/5 bg-[#0a0a0a] flex flex-col shrink-0">
