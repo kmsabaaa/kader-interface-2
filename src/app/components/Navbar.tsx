@@ -49,6 +49,9 @@ export default function Navbar() {
             <Link href="/equipment">Equipment</Link>
             <Link href="/talent">Talent</Link>
             <Link href="/locations">Locations</Link>
+            <SignedIn>
+              <Link href="/dashboard" className="text-amber-500 font-bold tracking-tight border-l border-white/10 pl-8">Mission Control</Link>
+            </SignedIn>
             <Link href="/community">Community</Link>
           </div>
 
