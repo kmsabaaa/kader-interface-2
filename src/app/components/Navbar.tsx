@@ -53,7 +53,12 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4 relative z-[10002]">
-            <SignedIn><UserButton /></SignedIn>
+            <SignedIn>
+              <Link href="/dashboard" className="hidden md:block text-sm font-bold text-amber-500 hover:text-amber-400 transition-colors mr-2">
+                Mission Control
+              </Link>
+              <UserButton />
+            </SignedIn>
             <SignedOut>
               <div className="hidden md:flex gap-4">
                 <SignInButton mode="modal"><button className="text-white text-sm">Log in</button></SignInButton>
