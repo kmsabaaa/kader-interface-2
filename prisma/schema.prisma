@@ -20,10 +20,19 @@ enum AvailabilityStatus {
   MAINTENANCE
 }
 
+enum TransactionStatus {
+  REQUESTED
+  ESCROW_FUNDED
+  HANDOVER_CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id           String    @id @default(cuid())
   clerkId      String    @unique 
   role         String    @default("CONSUMER") 
+  name         String?
   isCreator    Boolean   @default(false)
   creatorTitle String?   
   creatorBio   String?   @db.Text
@@ -32,6 +41,8 @@ model User {
   projects     Project[]
   listings     Listing[] 
   services     Service[] 
+  reviews      Review[]    @relation("UserReviews") // Reviews this user received
+  givenReviews Review[]    @relation("AuthoredReviews") // Reviews this user wrote
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -61,19 +72,15 @@ model Listing {
   title           String    
   description     String?   @db.Text
   type            String           @default("EQUIPMENT") 
-  
-  // Visibility: Controls if the public can even SEE the listing
   visibility      ListingVisibility @default(PUBLISHED)
-  
-  // Availability: Controls the booking state (replaces the old boolean)
   availability    AvailabilityStatus @default(AVAILABLE)
-  
   pricePerDay     Float            @default(0.00) 
   imageUrl        String?   
   
   userId          String
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings        CallSheetItem[] 
+  reviews         Review[]
   
   locationProfile LocationProfile? 
 
@@ -83,27 +90,66 @@ model Listing {
   @@index([userId])
   @@index([type])
   @@index([visibility])
-  @@index([availability])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      @default(5)
+  comment     String?  @db.Text
+  
+  // Review can be for a listing (Gear/Location) or a User (Talent/Provider)
+  listingId   String?
+  listing     Listing? @relation(fields: [listingId], references: [id])
+  
+  targetUserId String?
+  targetUser   User?   @relation("UserReviews", fields: [targetUserId], references: [id])
+  
+  authorId     String
+  author       User    @relation("AuthoredReviews", fields: [authorId], references: [id])
+
+  createdAt    DateTime @default(now())
+
+  @@index([listingId])
+  @@index([targetUserId])
+  @@index([authorId])
+}
+
+model CallSheetItem {
+  id        String            @id @default(cuid())
+  projectId String
+  listingId String?   
+  serviceId String?   
+  status    TransactionStatus @default(REQUESTED) 
+  startDate DateTime? 
+  endDate   DateTime? 
+  totalCost Float             @default(0.00)
+  
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  service   Service?  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime  @default(now())
+
+  @@index([projectId])
+  @@index([listingId])
+  @@index([serviceId])
+  @@index([status])
 }
 
 model LocationProfile {
   id                 String   @id @default(cuid())
   listingId          String   @unique
   listing            Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  
   address            String?
   typeOfLocation     String?  
   sqftArea           String?  
   sunDirection       String?  
-  
   powerSupply        String?  
   soundConditions    String?  
   lightingConditions String?  
   parkingLink        String?  
-  
   permitStatus       String?  
   restrictions       String?  @db.Text 
-
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -120,25 +166,4 @@ model Service {
   updatedAt   DateTime        @updatedAt
 
   @@index([userId])
-}
-
-model CallSheetItem {
-  id        String    @id @default(cuid())
-  projectId String
-  listingId String?   
-  serviceId String?   
-  status    String    @default("PENDING") 
-  startDate DateTime? 
-  endDate   DateTime? 
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  service   Service?  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-
-  @@index([projectId])
-  @@index([listingId])
-  @@index([serviceId])
-  @@index([status])
-  @@index([startDate])
-  @@index([endDate])
 }
