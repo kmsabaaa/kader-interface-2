@@ -32,7 +32,7 @@ export default async function SearchPage({
 
   return (
     <div className="min-h-screen bg-[#030303] text-white font-sans pt-28 pb-12 selection:bg-amber-500/30">
-      <div className="max-w-350 mx-auto px-6 mb-8">
+      <div className="max-w-7xl mx-auto px-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-amber-200 to-amber-600">
             Marketplace
@@ -47,25 +47,27 @@ export default async function SearchPage({
         <div className="w-full bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-2 flex flex-col md:flex-row gap-2 shadow-2xl">
           <SearchInput initialValue={query} />
           <button className="bg-linear-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold rounded-xl px-8 py-3 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
-            Searching...
+            Search
           </button>
         </div>
       </div>
 
-      <div className="max-w-350 mx-auto px-6 flex flex-col lg:flex-row gap-8">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-72 shrink-0 space-y-8">
           <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Filter className="w-5 h-5 text-amber-500" /> Categories</h3>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <Filter className="w-5 h-5 text-amber-500" /> Categories
+            </h3>
             <div className="space-y-2">
               <Link 
-                href={`/search?category=equipment${query ? \`&q=\${query}\` : ""}`}
-                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all \${category === "EQUIPMENT" ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "hover:bg-white/5 text-zinc-400"}`}
+                href={`/search?category=equipment${query ? `&q=${query}` : ""}`}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${category === "EQUIPMENT" ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "hover:bg-white/5 text-zinc-400"}`}
               >
                 <span className="flex items-center gap-2"><Camera className="w-4 h-4" /> Equipment</span>
               </Link>
               <Link 
-                href={`/search?category=location${query ? \`&q=\${query}\` : ""}`}
-                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all \${category === "LOCATION" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "hover:bg-white/5 text-zinc-400"}`}
+                href={`/search?category=location${query ? `&q=${query}` : ""}`}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${category === "LOCATION" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "hover:bg-white/5 text-zinc-400"}`}
               >
                 <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Locations</span>
               </Link>
@@ -73,7 +75,9 @@ export default async function SearchPage({
           </div>
 
           <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><SlidersHorizontal className="w-5 h-5 text-amber-500" /> Price Filter</h3>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <SlidersHorizontal className="w-5 h-5 text-amber-500" /> Price Filter
+            </h3>
             <form action="/search" method="GET" className="space-y-4">
               {query && <input type="hidden" name="q" value={query} />}
               {category && <input type="hidden" name="category" value={category} />}
@@ -81,14 +85,18 @@ export default async function SearchPage({
                 <input name="min" type="number" placeholder="Min" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
                 <input name="max" type="number" placeholder="Max" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
               </div>
-              <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-lg border border-white/5 transition-all">Apply Range</button>
+              <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-lg border border-white/5 transition-all">
+                Apply Range
+              </button>
             </form>
           </div>
         </aside>
 
         <main className="flex-1">
           <div className="flex justify-between items-center mb-6">
-            <p className="text-zinc-400 text-sm">Found <span className="text-white font-bold">{listings.length}</span> results for <span className="text-amber-500 italic">"{query || "All Assets"}"</span></p>
+            <p className="text-zinc-400 text-sm">
+              Found <span className="text-white font-bold">{listings.length}</span> results for <span className="text-amber-500 italic">"{query || "All Assets"}"</span>
+            </p>
           </div>
 
           {listings.length === 0 ? (
@@ -100,7 +108,7 @@ export default async function SearchPage({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {listings.map((listing) => (
-                <Link href={`/listing/\${listing.id}`} key={listing.id} className="group">
+                <Link href={`/listing/${listing.id}`} key={listing.id} className="group">
                   <div className="bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1">
                     <div className="h-56 w-full bg-zinc-800 relative overflow-hidden">
                       {listing.imageUrl && <img src={listing.imageUrl} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />}
