@@ -20,7 +20,7 @@ export default function SearchInput({ initialValue }: { initialValue: string }) 
         params.delete('q');
       }
 
-      router.replace(\`/search?\${params.toString()}\`, { scroll: false });
+      router.replace(`/search?${params.toString()}`, { scroll: false });
     }, 300);
 
     return () => clearTimeout(timer);
