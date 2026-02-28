@@ -9,19 +9,23 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string; category?: string; min?: string; max?: string }> 
 }) {
   const resolvedParams = await searchParams;
-  const query = resolvedParams.q || "";
-  const category = resolvedParams.category?.toUpperCase() || "";
+  const query = (resolvedParams.q || "").trim();
+  const category = (resolvedParams.category || "").trim().toUpperCase();
   const minPrice = parseFloat(resolvedParams.min || "0");
   const maxPrice = parseFloat(resolvedParams.max || "1000000");
 
   const listings = await db.listing.findMany({
     where: {
       isAvailable: true,
-      OR: [
-        { title: { contains: query } },
-        { description: { contains: query } },
-      ],
-      ...(category ? { type: category } : {}),
+      // Only apply query filter if query is not empty
+      ...(query ? {
+        OR: [
+          { title: { contains: query } },
+          { description: { contains: query } },
+        ]
+      } : {}),
+      // Only apply category filter if category is a valid enum value (not empty)
+      ...(category && (category === "EQUIPMENT" || category === "LOCATION") ? { type: category as any } : {}),
       pricePerDay: {
         gte: minPrice,
         lte: maxPrice,
@@ -78,17 +82,22 @@ export default async function SearchPage({
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
               <SlidersHorizontal className="w-5 h-5 text-amber-500" /> Price Filter
             </h3>
-            <form action="/search" method="GET" className="space-y-4">
-              {query && <input type="hidden" name="q" value={query} />}
-              {category && <input type="hidden" name="category" value={category} />}
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <input name="min" type="number" placeholder="Min" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
-                <input name="max" type="number" placeholder="Max" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
+                <input id="minPrice" type="number" placeholder="Min" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
+                <input id="maxPrice" type="number" placeholder="Max" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
               </div>
-              <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-lg border border-white/5 transition-all">
+              <button 
+                onClick={() => {
+                   const min = (document.getElementById('minPrice') as HTMLInputElement).value;
+                   const max = (document.getElementById('maxPrice') as HTMLInputElement).value;
+                   window.location.href = `/search?${query ? `q=${query}&` : ''}${category ? `category=${category.toLowerCase()}&` : ''}${min ? `min=${min}&` : ''}${max ? `max=${max}` : ''}`;
+                }}
+                className="w-full py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-lg border border-white/5 transition-all"
+              >
                 Apply Range
               </button>
-            </form>
+            </div>
           </div>
         </aside>
 
