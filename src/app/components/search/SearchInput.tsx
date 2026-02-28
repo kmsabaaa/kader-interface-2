@@ -11,39 +11,33 @@ export default function SearchInput({ initialValue }: { initialValue: string }) 
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Don't trigger if the value hasn't changed from what's already in the URL
       if (value === initialValue) return;
 
       const params = new URLSearchParams(searchParams.toString());
       
-      // 1. Update the 'q' parameter
+      // Update query or delete if empty
       if (value.trim()) {
         params.set('q', value.trim());
       } else {
         params.delete('q');
       }
 
-      // 2. PRESERVE CONTEXT: We don't touch 'category', 'min', or 'max' 
-      // they stay in the URL if they were already there.
+      // Cleanup: Strip ALL empty parameters from the URL (including ghost 'location' or 'category')
+      const keysToDelete: string[] = [];
+      params.forEach((val, key) => {
+        if (!val || val.trim() === '' || val === 'undefined') {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => params.delete(key));
 
       const queryString = params.toString();
-      router.replace(queryString ? `/search?${queryString}` : '/search', { scroll: false });
-    }, 400); // Slightly longer debounce for better multi-param stability
+      const finalPath = queryString ? `/search?${queryString}` : '/search';
+      router.replace(finalPath, { scroll: false });
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [value, router, searchParams, initialValue]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value.trim()) {
-        params.set('q', value.trim());
-      } else {
-        params.delete('q');
-      }
-      router.replace(`/search?${params.toString()}`, { scroll: false });
-    }
-  };
 
   return (
     <div className="flex-1 flex items-center bg-black/40 rounded-xl px-4 py-3 border border-white/5 focus-within:border-amber-500/50 transition-colors">
@@ -52,7 +46,6 @@ export default function SearchInput({ initialValue }: { initialValue: string }) 
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyDown}
         placeholder="Search assets..."
         className="bg-transparent w-full text-white placeholder:text-zinc-500 outline-none text-sm md:text-base"
       />

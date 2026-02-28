@@ -62,13 +62,13 @@ export default async function SearchPage({
             </h3>
             <div className="space-y-2">
               <Link 
-                href={`/search?category=equipment${query ? `&q=${query}` : ""}`}
+                href={`/search?category=EQUIPMENT${query ? `&q=${query}` : ""}`}
                 className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${category === "EQUIPMENT" ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "hover:bg-white/5 text-zinc-400"}`}
               >
                 <span className="flex items-center gap-2"><Camera className="w-4 h-4" /> Equipment</span>
               </Link>
               <Link 
-                href={`/search?category=location${query ? `&q=${query}` : ""}`}
+                href={`/search?category=LOCATION${query ? `&q=${query}` : ""}`}
                 className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${category === "LOCATION" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "hover:bg-white/5 text-zinc-400"}`}
               >
                 <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Locations</span>
