@@ -166,7 +166,6 @@ export default function Home() {
                   <MapPin className="w-5 h-5 text-zinc-400 mr-2 shrink-0" />
                   <input 
                     type="text" 
-                    name="location"
                     placeholder="Bahrain" 
                     className="bg-transparent w-24 text-white outline-none text-sm md:text-base" 
                   />

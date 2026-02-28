@@ -46,7 +46,7 @@ export default async function LocationsPage() {
             </div>
             <div className="hidden sm:flex items-center bg-black/40 rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-white/5 focus-within:border-emerald-500/50 transition-colors cursor-none">
               <MapPin className="w-4 sm:w-5 h-4 sm:h-5 text-zinc-400 mr-2 shrink-0" />
-              <input type="text" name="location" placeholder="Bahrain" className="bg-transparent w-20 sm:w-24 text-white placeholder:text-zinc-500 outline-none text-xs sm:text-sm md:text-base cursor-none" />
+              <input type="text" name="q" placeholder="Bahrain" className="bg-transparent w-20 sm:w-24 text-white placeholder:text-zinc-500 outline-none text-xs sm:text-sm md:text-base cursor-none" />
             </div>
             <button type="submit" className="bg-linear-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-bold rounded-xl px-4 sm:px-8 py-2 sm:py-3 transition-all transform hover:scale-[1.02] active:scale-[0.98] cursor-none text-sm sm:text-base">
               Search
