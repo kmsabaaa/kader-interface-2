@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { db } from "../../lib/db";
 import Link from "next/link";
 import { Search as SearchIcon, Camera, Star, SlidersHorizontal, Zap, Video } from "lucide-react";
