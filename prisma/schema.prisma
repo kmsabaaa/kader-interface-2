@@ -8,10 +8,16 @@ datasource db {
   relationMode = "prisma"
 }
 
-enum ListingStatus {
+enum ListingVisibility {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BOOKED
+  MAINTENANCE
 }
 
 model User {
@@ -55,10 +61,16 @@ model Listing {
   title           String    
   description     String?   @db.Text
   type            String           @default("EQUIPMENT") 
-  status          ListingStatus    @default(PUBLISHED)
+  
+  // Visibility: Controls if the public can even SEE the listing
+  visibility      ListingVisibility @default(PUBLISHED)
+  
+  // Availability: Controls the booking state (replaces the old boolean)
+  availability    AvailabilityStatus @default(AVAILABLE)
+  
   pricePerDay     Float            @default(0.00) 
   imageUrl        String?   
-  isAvailable     Boolean          @default(true)
+  
   userId          String
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings        CallSheetItem[] 
@@ -70,8 +82,8 @@ model Listing {
 
   @@index([userId])
   @@index([type])
-  @@index([isAvailable])
-  @@index([status])
+  @@index([visibility])
+  @@index([availability])
 }
 
 model LocationProfile {

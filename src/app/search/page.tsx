@@ -17,8 +17,8 @@ function SearchSkeleton() {
 async function ResultsGrid({ query, category, minPrice, maxPrice }: any) {
   const listings = await db.listing.findMany({
     where: {
-      isAvailable: true,
-      status: "PUBLISHED", // CRITICAL: Only show live items
+      visibility: "PUBLISHED", // Admin-controlled visibility
+      availability: "AVAILABLE", // Real-time booking state
       ...(query ? {
         OR: [ { title: { contains: query } }, { description: { contains: query } } ]
       } : {}),
@@ -73,7 +73,7 @@ export default async function SearchPage({
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-black tracking-tighter">Marketplace</h1>
         </div>
-        <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-2 flex gap-2">
+        <div className="w-full bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-2 flex gap-2">
           <SearchInput initialValue={query} />
         </div>
       </div>
