@@ -18,22 +18,16 @@ export default async function SearchPage({
     where: {
       isAvailable: true,
       ...(query ? {
-        OR: [
-          { title: { contains: query } },
-          { description: { contains: query } },
-        ]
+        OR: [ { title: { contains: query } }, { description: { contains: query } } ]
       } : {}),
       ...(category && (category === "EQUIPMENT" || category === "LOCATION") ? { type: category as any } : {}),
-      pricePerDay: {
-        gte: minPrice,
-        lte: maxPrice,
-      },
+      pricePerDay: { gte: minPrice, lte: maxPrice },
     },
     orderBy: { createdAt: "desc" }
   });
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white font-sans pt-28 pb-12 selection:bg-amber-500/30">
+    <div className="min-h-screen bg-[#030303] text-white font-sans pt-28 pb-12">
       <div className="max-w-7xl mx-auto px-6 mb-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-amber-200 to-amber-600">
@@ -46,10 +40,11 @@ export default async function SearchPage({
           )}
         </div>
         
-        <div className="w-full bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-2 flex flex-col md:flex-row gap-2 shadow-2xl">
+        {/* STANDALONE SEARCH BAR (NO FORM, NO REDIRECTS) */}
+        <div className="w-full bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-2 flex gap-2">
           <SearchInput initialValue={query} />
-          <div className="hidden md:flex items-center px-8 bg-zinc-800/50 text-zinc-400 rounded-xl text-sm font-bold border border-white/5">
-            Auto-searching...
+          <div className="hidden md:flex items-center px-8 bg-amber-500 text-black rounded-xl text-sm font-bold">
+            Search
           </div>
         </div>
       </div>
@@ -57,80 +52,29 @@ export default async function SearchPage({
       <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-72 shrink-0 space-y-8">
           <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <Filter className="w-5 h-5 text-amber-500" /> Categories
-            </h3>
+            <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Filter className="w-5 h-5 text-amber-500" /> Categories</h3>
             <div className="space-y-2">
-              <Link 
-                href={`/search?category=EQUIPMENT${query ? `&q=${query}` : ""}`}
-                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${category === "EQUIPMENT" ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" : "hover:bg-white/5 text-zinc-400"}`}
-              >
+              <Link href={`/search?category=EQUIPMENT${query ? `&q=${query}` : ""}`} className={`w-full flex items-center justify-between p-3 rounded-xl ${category === "EQUIPMENT" ? "bg-amber-500/10 text-amber-400" : "hover:bg-white/5 text-zinc-400"}`}>
                 <span className="flex items-center gap-2"><Camera className="w-4 h-4" /> Equipment</span>
               </Link>
-              <Link 
-                href={`/search?category=LOCATION${query ? `&q=${query}` : ""}`}
-                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${category === "LOCATION" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "hover:bg-white/5 text-zinc-400"}`}
-              >
+              <Link href={`/search?category=LOCATION${query ? `&q=${query}` : ""}`} className={`w-full flex items-center justify-between p-3 rounded-xl ${category === "LOCATION" ? "bg-emerald-500/10 text-emerald-400" : "hover:bg-white/5 text-zinc-400"}`}>
                 <span className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Locations</span>
               </Link>
             </div>
-          </div>
-
-          <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <SlidersHorizontal className="w-5 h-5 text-amber-500" /> Price Filter
-            </h3>
-            {/* Using a standard GET form here to avoid onClick server/client conflict */}
-            <form action="/search" method="GET" className="space-y-4">
-              {query && <input type="hidden" name="q" value={query} />}
-              {category && <input type="hidden" name="category" value={category.toLowerCase()} />}
-              <div className="flex items-center gap-2">
-                <input name="min" type="number" placeholder="Min" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
-                <input name="max" type="number" placeholder="Max" className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-amber-500/50" />
-              </div>
-              <button type="submit" className="w-full py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-lg border border-white/5 transition-all">
-                Apply Range
-              </button>
-            </form>
           </div>
         </aside>
 
         <main className="flex-1">
           <div className="flex justify-between items-center mb-6">
-            <p className="text-zinc-400 text-sm">
-              Found <span className="text-white font-bold">{listings.length}</span> results for <span className="text-amber-500 italic">"{query || "All Assets"}"</span>
-            </p>
+            <p className="text-zinc-400 text-sm">Found <span className="text-white font-bold">{listings.length}</span> results</p>
           </div>
-
-          {listings.length === 0 ? (
-            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-16 flex flex-col items-center justify-center text-center border-dashed">
-              <SearchIcon className="w-12 h-12 text-zinc-600 mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">No matches found</h3>
-              <p className="text-zinc-400 max-w-md">Try adjusting your filters or searching for something else.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {listings.map((listing) => (
-                <Link href={`/listing/${listing.id}`} key={listing.id} className="group">
-                  <div className="bg-zinc-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1">
-                    <div className="h-56 w-full bg-zinc-800 relative overflow-hidden">
-                      {listing.imageUrl && <img src={listing.imageUrl} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />}
-                      <div className="absolute top-3 left-3 px-3 py-1 bg-black/60 backdrop-blur-md rounded-md border border-white/10 text-xs font-bold text-white uppercase tracking-wider">{listing.type}</div>
-                      <div className="absolute top-3 right-3 px-2 py-1 bg-amber-500/20 backdrop-blur-md rounded-md border border-amber-500/30 text-xs font-bold text-amber-400 flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400" /> 4.9</div>
-                    </div>
-                    <div className="p-5">
-                      <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{listing.title}</h3>
-                      <p className="text-zinc-400 text-sm mb-5 line-clamp-2 min-h-10">{listing.description}</p>
-                      <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                        <span className="text-white text-lg font-bold">{listing.pricePerDay} <span className="text-zinc-500 text-sm font-normal">BHD / day</span></span>
-                        <button className="bg-white/10 hover:bg-amber-500 hover:text-black text-white font-bold rounded-lg px-4 py-2 transition-colors text-sm">View details</button>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {listings.map((listing) => (
+              <Link href={`/listing/${listing.id}`} key={listing.id} className="group border border-white/5 bg-zinc-900/50 rounded-2xl overflow-hidden p-4">
+                {listing.title}
+              </Link>
+            ))}
+          </div>
         </main>
       </div>
     </div>
