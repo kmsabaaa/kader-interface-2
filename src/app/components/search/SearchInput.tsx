@@ -11,25 +11,28 @@ export default function SearchInput({ initialValue }: { initialValue: string }) 
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Don't trigger if the value hasn't changed from what's already in the URL
       if (value === initialValue) return;
 
       const params = new URLSearchParams(searchParams.toString());
       
-      // Only modify 'q'. If value is empty, remove the key to keep URL clean.
+      // 1. Update the 'q' parameter
       if (value.trim()) {
         params.set('q', value.trim());
       } else {
         params.delete('q');
       }
 
+      // 2. PRESERVE CONTEXT: We don't touch 'category', 'min', or 'max' 
+      // they stay in the URL if they were already there.
+
       const queryString = params.toString();
       router.replace(queryString ? `/search?${queryString}` : '/search', { scroll: false });
-    }, 300);
+    }, 400); // Slightly longer debounce for better multi-param stability
 
     return () => clearTimeout(timer);
   }, [value, router, searchParams, initialValue]);
 
-  // Handle Enter key for immediate search (optional but good UX)
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       const params = new URLSearchParams(searchParams.toString());
