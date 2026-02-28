@@ -8,6 +8,12 @@ datasource db {
   relationMode = "prisma"
 }
 
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id           String    @id @default(cuid())
   clerkId      String    @unique 
@@ -49,6 +55,7 @@ model Listing {
   title           String    
   description     String?   @db.Text
   type            String           @default("EQUIPMENT") 
+  status          ListingStatus    @default(PUBLISHED)
   pricePerDay     Float            @default(0.00) 
   imageUrl        String?   
   isAvailable     Boolean          @default(true)
@@ -64,6 +71,7 @@ model Listing {
   @@index([userId])
   @@index([type])
   @@index([isAvailable])
+  @@index([status])
 }
 
 model LocationProfile {
