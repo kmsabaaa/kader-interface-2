@@ -33,22 +33,31 @@ model User {
   clerkId      String    @unique 
   role         String    @default("CONSUMER") 
   name         String?
+  
+  // High-End Creator Profile Fields
   isCreator    Boolean   @default(false)
   creatorTitle String?   
   creatorBio   String?   @db.Text
   showreelUrl  String?   
+  location     String?   // e.g., Manama, Bahrain
+  instagram    String?
+  linkedin     String?
+  website      String?
+  profileImage String?   // Custom profile image override
 
+  // Relationships
   projects     Project[]
   listings     Listing[] 
   services     Service[] 
-  reviews      Review[]    @relation("UserReviews") // Reviews this user received
-  givenReviews Review[]    @relation("AuthoredReviews") // Reviews this user wrote
+  reviews      Review[]    @relation("UserReviews")
+  givenReviews Review[]    @relation("AuthoredReviews")
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   @@index([role])
   @@index([clerkId])
+  @@index([isCreator])
 }
 
 model Project {
@@ -96,17 +105,12 @@ model Review {
   id          String   @id @default(cuid())
   rating      Int      @default(5)
   comment     String?  @db.Text
-  
-  // Review can be for a listing (Gear/Location) or a User (Talent/Provider)
   listingId   String?
   listing     Listing? @relation(fields: [listingId], references: [id])
-  
   targetUserId String?
   targetUser   User?   @relation("UserReviews", fields: [targetUserId], references: [id])
-  
   authorId     String
   author       User    @relation("AuthoredReviews", fields: [authorId], references: [id])
-
   createdAt    DateTime @default(now())
 
   @@index([listingId])
@@ -123,12 +127,10 @@ model CallSheetItem {
   startDate DateTime? 
   endDate   DateTime? 
   totalCost Float             @default(0.00)
-  
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  listing   Listing?  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  service   Service?  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime  @default(now())
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listing   Listing?          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  service   Service?          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  createdAt DateTime          @default(now())
 
   @@index([projectId])
   @@index([listingId])
