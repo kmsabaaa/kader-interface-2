@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Camera, MapPin, Eye, EyeOff, Trash2, Edit3, MoreVertical, Plus } from 'lucide-react';
 import Image from 'next/image';
+import NewListingModal from './NewListingModal';
 
 export default function InventoryHub({ listings }: { listings: any[] }) {
   return (
@@ -14,9 +15,7 @@ export default function InventoryHub({ listings }: { listings: any[] }) {
           <h2 className="text-2xl font-bold">Asset Inventory</h2>
           <p className="text-zinc-500 text-sm">Manage your equipment and locations.</p>
         </div>
-        <button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-black font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20">
-          <Plus className="w-5 h-5" /> Add New Asset
-        </button>
+        <NewListingModal />
       </div>
 
       {/* Responsive Grid: 1 col on mobile, 2 on tablet, 3 on desktop */}

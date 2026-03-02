@@ -2,6 +2,7 @@
 
 import { Film, Calendar, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import NewProjectModal from './NewProjectModal';
 
 export default function ProjectsHub({ projects }: { projects: any[] }) {
   return (
@@ -12,9 +13,7 @@ export default function ProjectsHub({ projects }: { projects: any[] }) {
           <h2 className="text-2xl font-bold text-white">Your Productions</h2>
           <p className="text-zinc-500 text-sm font-medium">Manage your project sets and resource bookings.</p>
         </div>
-        <button className="w-full sm:w-auto bg-blue-500 hover:bg-blue-400 text-white font-black px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20">
-          <Plus className="w-5 h-5" /> Start New Project
-        </button>
+        <NewProjectModal />
       </div>
 
       <div className="grid grid-cols-1 gap-4">
