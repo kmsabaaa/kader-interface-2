@@ -8,6 +8,7 @@ import RoleSwitch from "./RoleSwitch";
 import ProfileSettings from "./ProfileSettings";
 import InventoryHub from "./InventoryHub";
 import QuickActions from "./QuickActions";
+import ProjectsHub from "./ProjectsHub";
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const resolvedParams = await searchParams;
@@ -25,7 +26,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   if (!dbUser) redirect("/");
 
   const isProvider = dbUser.role === "PROVIDER";
-  const isAdmin = userId === "user_3AISoqNWAgFtVmrDkNNht2tYeyB"; // Komail's ID for Admin access
+  const isAdmin = userId === "user_3AISoqNWAgFtVmrDkNNht2tYeyB"; 
 
   const getTabClass = (tabName: string) => {
     return currentTab === tabName
@@ -35,8 +36,6 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row">
-      
-      {/* MOBILE HEADER (Visible only on Mobile) */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0a] sticky top-0 z-50">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-bold text-black">K</div>
@@ -45,17 +44,14 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <UserButton />
       </div>
 
-      {/* PERSISTENT SIDEBAR (Fixed on Left for Desktop) */}
       <aside className="w-full md:w-72 border-r border-white/5 bg-[#0a0a0a] flex flex-col shrink-0 md:h-screen sticky top-0">
         <div className="hidden md:flex p-8 items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center font-bold text-black text-xl shadow-lg shadow-amber-500/20">K</div>
+          <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center font-bold text-black text-xl">K</div>
           <span className="text-xl font-bold tracking-tighter text-white">Mission Control</span>
         </div>
-        
         <nav className="flex-1 px-4 flex flex-col gap-1.5 md:mt-2 pb-6">
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-4">Personal</p>
           <Link href="/dashboard?tab=overview" className={getTabClass("overview")}><LayoutGrid className="w-5 h-5" /> Overview</Link>
-          
           {!isProvider ? (
             <>
               <Link href="/dashboard?tab=projects" className={getTabClass("projects")}><Film className="w-5 h-5" /> My Projects</Link>
@@ -67,11 +63,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               <Link href="/dashboard?tab=calendar" className={getTabClass("calendar")}><Calendar className="w-5 h-5" /> Schedule</Link>
             </>
           )}
-
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-8">Identity</p>
           <Link href="/dashboard?tab=settings" className={getTabClass("settings")}><UserCircle className="w-5 h-5" /> Profile Hub</Link>
-          <Link href="/dashboard?tab=billing" className={getTabClass("billing")}><CreditCard className="w-5 h-5" /> Escrow & Billing</Link>
-
           {isAdmin && (
             <>
               <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-8 text-blue-500">Kader Admin</p>
@@ -79,74 +72,41 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             </>
           )}
         </nav>
-
         <div className="p-4 mt-auto border-t border-white/5 hidden md:block">
           <RoleSwitch isProvider={isProvider} />
         </div>
       </aside>
 
-      {/* MAIN VIEWPORT */}
       <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-[#030303]">
         <header className="hidden md:flex h-24 border-b border-white/5 px-10 items-center justify-between sticky top-0 z-10 bg-[#030303]/90 backdrop-blur-xl shrink-0">
-          <div className="flex items-center bg-white/5 rounded-2xl px-5 py-3 w-[450px] border border-white/5 focus-within:border-amber-500/30 focus-within:bg-white/10 transition-all duration-300">
+          <div className="flex items-center bg-white/5 rounded-2xl px-5 py-3 w-[450px] border border-white/5 focus-within:border-amber-500/30 transition-all duration-300">
             <Search className="w-4 h-4 text-zinc-500 mr-3" />
-            <input type="text" placeholder="Search mission files, assets, or projects..." className="bg-transparent text-sm w-full outline-none placeholder:text-zinc-600 font-medium" />
+            <input type="text" placeholder="Search mission files..." className="bg-transparent text-sm w-full outline-none placeholder:text-zinc-600 font-medium" />
           </div>
-          <div className="flex items-center gap-6">
-             <div className="h-10 w-px bg-white/10"></div>
-             <UserButton appearance={{ elements: { avatarBox: "w-11 h-11 border-2 border-amber-500/30 hover:scale-105 transition-all" } }} />
-          </div>
+          <UserButton appearance={{ elements: { avatarBox: "w-11 h-11 border-2 border-amber-500/30" } }} />
         </header>
 
         <div className="p-6 md:p-12 max-w-7xl mx-auto w-full">
-          {/* TAB: OVERVIEW */}
           {currentTab === "overview" && (
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-               <div className="mb-12">
-                 <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-3">
-                   Welcome, <span className="text-transparent bg-clip-text bg-linear-to-r from-white via-white to-zinc-600">{user?.firstName || "Director"}</span>.
-                 </h1>
-                 <p className="text-zinc-500 text-lg font-medium">Your production universe is synchronized and safe.</p>
-               </div>
-
+               <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-12">Welcome, {user?.firstName}.</h1>
                <QuickActions isProvider={isProvider} />
-
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group hover:border-blue-500/30 transition-all duration-500">
-                     <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 blur-[60px]"></div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
                      <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">{isProvider ? "MARKET INVENTORY" : "LIVE PRODUCTIONS"}</h3>
-                     <p className="text-6xl font-black">{isProvider ? (dbUser.listings.length + dbUser.services.length) : dbUser.projects.length}</p>
+                     <p className="text-6xl font-black">{isProvider ? dbUser.listings.length : dbUser.projects.length}</p>
                   </div>
-                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-500">
-                     <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 blur-[60px]"></div>
+                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
                      <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">ESCROW BALANCE</h3>
-                     <p className="text-6xl font-black text-emerald-400">0.00 <span className="text-sm text-zinc-600 font-bold tracking-widest">BHD</span></p>
+                     <p className="text-6xl font-black text-emerald-400">0.00 <span className="text-sm text-zinc-600 font-bold uppercase tracking-tighter">BHD</span></p>
                   </div>
                </div>
             </div>
           )}
-
-          {/* TAB: SETTINGS */}
           {currentTab === "settings" && <ProfileSettings user={dbUser} />}
-
-          {/* TAB: INVENTORY */}
           {currentTab === "inventory" && <InventoryHub listings={dbUser.listings} />}
-
-          {/* TAB: ADMIN (KOMAIL ONLY) */}
-          {currentTab === "admin" && isAdmin && (
-            <div className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem] bg-blue-500/5">
-              <ShieldCheck className="w-16 h-16 text-blue-500 mx-auto mb-6" />
-              <h2 className="text-3xl font-black tracking-tighter mb-2 text-white uppercase">Kader HQ</h2>
-              <p className="text-zinc-400 font-medium">Platform-wide analytics and verification engine loading...</p>
-            </div>
-          )}
-
-          {/* FALLBACKS */}
-          {["projects", "saved", "calendar", "billing"].includes(currentTab) && (
-            <div className="py-32 text-center border border-dashed border-white/10 rounded-[2.5rem] bg-white/[0.01]">
-              <p className="text-zinc-600 font-black uppercase tracking-[0.3em] text-xs">Module in Final Assembly</p>
-            </div>
-          )}
+          {currentTab === "projects" && <ProjectsHub projects={dbUser.projects} />}
+          {currentTab === "admin" && isAdmin && <div className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>}
         </div>
       </main>
     </div>
