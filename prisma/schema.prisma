@@ -22,10 +22,19 @@ enum AvailabilityStatus {
 
 enum TransactionStatus {
   REQUESTED
+  ACCEPTED
   ESCROW_FUNDED
   HANDOVER_CONFIRMED
+  RETURNED_BY_CONSUMER
+  CONDITION_VERIFIED
   COMPLETED
   CANCELLED
+  DISPUTED
+}
+
+enum ListingType {
+  EQUIPMENT
+  LOCATION
 }
 
 model User {
@@ -33,17 +42,20 @@ model User {
   clerkId      String    @unique 
   role         String    @default("CONSUMER") 
   name         String?
+  email        String?
   
-  // High-End Creator Profile Fields
+  // Wallet & Financials
+  walletBalance Float    @default(0.00)
+  
+  // Creator Profile
   isCreator    Boolean   @default(false)
   creatorTitle String?   
   creatorBio   String?   @db.Text
   showreelUrl  String?   
-  location     String?   // e.g., Manama, Bahrain
+  location     String?   
   instagram    String?
   linkedin     String?
-  website      String?
-  profileImage String?   // Custom profile image override
+  profileImage String?
 
   // Relationships
   projects     Project[]
@@ -52,12 +64,14 @@ model User {
   reviews      Review[]    @relation("UserReviews")
   givenReviews Review[]    @relation("AuthoredReviews")
   
+  // Transactions as either buyer or seller
+  purchases    Transaction[] @relation("Buyer")
+  sales        Transaction[] @relation("Seller")
+  
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  @@index([role])
   @@index([clerkId])
-  @@index([isCreator])
 }
 
 model Project {
@@ -73,14 +87,13 @@ model Project {
   updatedAt   DateTime        @updatedAt
 
   @@index([userId])
-  @@index([status])
 }
 
 model Listing {
   id              String           @id @default(cuid())
   title           String    
   description     String?   @db.Text
-  type            String           @default("EQUIPMENT") 
+  type            ListingType      @default(EQUIPMENT) 
   visibility      ListingVisibility @default(PUBLISHED)
   availability    AvailabilityStatus @default(AVAILABLE)
   pricePerDay     Float            @default(0.00) 
@@ -97,8 +110,55 @@ model Listing {
   updatedAt       DateTime         @updatedAt
 
   @@index([userId])
-  @@index([type])
-  @@index([visibility])
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  amount        Float
+  fee           Float             // Kader Platform Fee
+  status        TransactionStatus @default(REQUESTED)
+  
+  buyerId       String
+  buyer         User              @relation("Buyer", fields: [buyerId], references: [id])
+  
+  sellerId      String
+  seller        User              @relation("Seller", fields: [sellerId], references: [id])
+  
+  callSheetItemId String          @unique
+  callSheetItem   CallSheetItem   @relation(fields: [callSheetItemId], references: [id])
+
+  isDisputed    Boolean           @default(false)
+  disputeReason String?           @db.Text
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model CallSheetItem {
+  id        String            @id @default(cuid())
+  projectId String
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  listingId String?   
+  listing   Listing?          @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  serviceId String?   
+  service   Service?          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  
+  status    TransactionStatus @default(REQUESTED) 
+  startDate DateTime? 
+  endDate   DateTime? 
+  totalCost Float             @default(0.00)
+  
+  transaction Transaction?
+
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([projectId])
 }
 
 model Review {
@@ -114,28 +174,6 @@ model Review {
   createdAt    DateTime @default(now())
 
   @@index([listingId])
-  @@index([targetUserId])
-  @@index([authorId])
-}
-
-model CallSheetItem {
-  id        String            @id @default(cuid())
-  projectId String
-  listingId String?   
-  serviceId String?   
-  status    TransactionStatus @default(REQUESTED) 
-  startDate DateTime? 
-  endDate   DateTime? 
-  totalCost Float             @default(0.00)
-  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  listing   Listing?          @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  service   Service?          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  createdAt DateTime          @default(now())
-
-  @@index([projectId])
-  @@index([listingId])
-  @@index([serviceId])
-  @@index([status])
 }
 
 model LocationProfile {
@@ -149,7 +187,6 @@ model LocationProfile {
   powerSupply        String?  
   soundConditions    String?  
   lightingConditions String?  
-  parkingLink        String?  
   permitStatus       String?  
   restrictions       String?  @db.Text 
   createdAt          DateTime @default(now())
