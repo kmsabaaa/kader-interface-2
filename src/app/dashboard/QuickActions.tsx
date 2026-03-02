@@ -40,9 +40,7 @@ export default function QuickActions({ isProvider }: { isProvider: boolean }) {
               <h3 className="text-xl font-bold text-white mb-1">List a Location</h3>
               <p className="text-zinc-500 text-sm">Studios, villas, rooftops, and urban sets.</p>
             </div>
-            <button className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl text-white transition-all">
-              <Plus className="w-5 h-5" />
-            </button>
+            <NewListingModal />
           </div>
         </div>
       </div>
