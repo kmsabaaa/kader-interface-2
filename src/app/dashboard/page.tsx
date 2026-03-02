@@ -44,7 +44,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <UserButton />
       </div>
 
-      <aside className="w-full md:w-72 border-r border-white/5 bg-[#0a0a0a] flex flex-col shrink-0 md:h-screen sticky top-0">
+      <aside className="w-full md:w-72 border-r border-white/5 bg-[#0a0a0a] flex flex-col shrink-0 md:h-screen sticky top-0 z-20">
         <div className="hidden md:flex p-8 items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center font-bold text-black text-xl">K</div>
           <span className="text-xl font-bold tracking-tighter text-white">Mission Control</span>
@@ -106,6 +106,18 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           {currentTab === "settings" && <ProfileSettings user={dbUser} />}
           {currentTab === "inventory" && <InventoryHub listings={dbUser.listings} />}
           {currentTab === "projects" && <ProjectsHub projects={dbUser.projects} />}
+          {currentTab === "saved" && (
+            <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
+               <Bookmark className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+               <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Your library is currently empty</p>
+            </div>
+          )}
+          {currentTab === "calendar" && (
+            <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
+               <Calendar className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+               <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No upcoming shoots scheduled</p>
+            </div>
+          )}
           {currentTab === "admin" && isAdmin && <div className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>}
         </div>
       </main>
