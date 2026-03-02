@@ -1,181 +1,124 @@
-import { db } from "../../../lib/db";
+import { db } from "@/lib/db";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Camera, MapPin, Users, ShieldCheck, ChevronRight, Star, Sun, Zap, VolumeX, FileText, AlertTriangle } from "lucide-react";
+import { MapPin, User, ShieldCheck, Star, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
-import BookingWidget from "./BookingWidget";
+import AddToProject from "./AddToProject";
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
+  const { id } = await params;
   const { userId } = await auth();
-  
-  // 1. Fetch the Gear OR Location, AND include the Tech Scout Profile if it exists
+  const user = await currentUser();
+
   const listing = await db.listing.findUnique({
-    where: { id: resolvedParams.id },
-    include: { locationProfile: true, user: { select: { id: true, clerkId: true } } }
+    where: { id },
+    include: { 
+      user: true, 
+      locationProfile: true,
+      bookings: true
+    }
   });
 
-  // Verify listing exists
-  if (!listing) return notFound();
-  let projects: any[] =[];
-  
+  if (!listing) notFound();
+
+  // Fetch User's Projects for the Dropdown
+  let userProjects = [];
   if (userId) {
-    const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
-    if (dbUser) {
-      projects = await db.project.findMany({
-        where: { userId: dbUser.id, status: "PLANNING" }, 
-        orderBy: { createdAt: "desc" }
-      });
-    }
+    const dbUser = await db.user.findUnique({
+      where: { clerkId: userId },
+      include: { projects: { where: { status: { not: "ARCHIVED" } } } }
+    });
+    if (dbUser) userProjects = dbUser.projects;
   }
 
-  const Icon = listing.type === "EQUIPMENT" ? Camera : listing.type === "LOCATION" ? MapPin : Users;
-  const profile = listing.locationProfile;
-
   return (
-    <div className="min-h-screen bg-[#030303] text-white font-sans pt-28 pb-24 cursor-none selection:bg-amber-500/30">
-      <div className="max-w-300 mx-auto px-6">
+    <div className="min-h-screen bg-[#030303] text-white">
+      <div className="max-w-7xl mx-auto md:px-12 py-8">
         
-        {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-sm text-zinc-500 font-medium mb-6">
-          <Link href="/search" className="hover:text-amber-500 transition-colors cursor-none">Marketplace</Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="capitalize">{listing.type.toLowerCase()}</span>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-zinc-300">{listing.title}</span>
-        </div>
+        {/* Back Nav */}
+        <Link href="/" className="inline-flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-8 px-4 md:px-0">
+          <ArrowLeft className="w-4 h-4" /> Back to Mission Control
+        </Link>
 
-        {/* Cinematic Hero Image */}
-        <div className="w-full h-[50vh] md:h-[60vh] bg-zinc-900 rounded-3xl overflow-hidden mb-10 relative border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          {listing.imageUrl && (
-            <Image 
-              src={listing.imageUrl} 
-              alt={listing.title} 
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-            />
-          )}
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent"></div>
-          <div className="absolute bottom-6 left-6 flex flex-wrap items-center gap-3">
-            <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-md border border-white/20 text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Icon className="w-4 h-4" /> {listing.type}
-            </span>
-            <span className="px-3 py-1 bg-amber-500/20 backdrop-blur-md rounded-md border border-amber-500/30 text-xs font-bold text-amber-400 flex items-center gap-1">
-              <Star className="w-3 h-3 fill-amber-400" /> Premium Verified
-            </span>
-            {listing.type === "LOCATION" && profile?.permitStatus === "Acquired" && (
-              <span className="px-3 py-1 bg-emerald-500/20 backdrop-blur-md rounded-md border border-emerald-500/30 text-xs font-bold text-emerald-400 flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Permits Cleared
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Two-Column Layout */}
-        <div className="flex flex-col lg:flex-row gap-12 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          <div className="flex-1 space-y-10">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">{listing.title}</h1>
-              <p className="text-xl text-zinc-400 font-light leading-relaxed whitespace-pre-wrap">
-                {listing.description}
-              </p>
+          {/* LEFT: VISUALS */}
+          <div className="lg:col-span-2 space-y-8 px-4 md:px-0">
+            <div className="relative aspect-video w-full overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-900 group">
+               {listing.imageUrl ? (
+                 <Image src={listing.imageUrl} alt={listing.title} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+               ) : (
+                 <div className="w-full h-full flex items-center justify-center text-zinc-700 font-black text-4xl uppercase tracking-widest">No Signal</div>
+               )}
+               <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 text-xs font-bold uppercase tracking-widest text-white">
+                 {listing.type}
+               </div>
             </div>
 
-            <div className="h-px w-full bg-white/10"></div>
-
-            {/* DYNAMIC SPECS RENDERER */}
-            {listing.type === "EQUIPMENT" ? (
-              // RENDER CAMERA / GEAR SPECS
-              <div>
-                <h3 className="text-2xl font-bold mb-6">Technical Specifications</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4">
-                    <span className="text-zinc-500 text-sm font-bold block mb-1">Condition</span>
-                    <span className="text-white font-medium">Mint / Like New</span>
-                  </div>
-                  <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4">
-                    <span className="text-zinc-500 text-sm font-bold block mb-1">Insurance Required</span>
-                    <span className="text-white font-medium">Yes - Escrow Coverage</span>
-                  </div>
-                  <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4">
-                    <span className="text-zinc-500 text-sm font-bold block mb-1">Pickup Location</span>
-                    <span className="text-white font-medium">Bahrain</span>
-                  </div>
-                  <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4">
-                    <span className="text-zinc-500 text-sm font-bold block mb-1">Minimum Rental</span>
-                    <span className="text-white font-medium">1 Day</span>
-                  </div>
-                </div>
-              </div>
-            ) : listing.type === "LOCATION" ? (
-              // RENDER ADVANCED LOCATION TECH SCOUT REPORT
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-emerald-400">
-                    <FileText className="w-6 h-6" /> Kader Tech Scout Report
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-                      <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider flex mb-1 items-center gap-2"><MapPin className="w-3 h-3"/> Location Type</span>
-                      <span className="text-white font-medium">{profile?.typeOfLocation || "Unspecified"}</span>
+            <div className="space-y-6">
+               <div>
+                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">{listing.title}</h1>
+                 <div className="flex items-center gap-4 text-zinc-400">
+                    <div className="flex items-center gap-1.5 bg-zinc-900 px-3 py-1 rounded-full border border-white/5">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      <span className="text-sm font-bold text-white">New</span>
                     </div>
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-                      <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider block mb-1">Size & Capacity</span>
-                      <span className="text-white font-medium">{profile?.sqftArea || "Unspecified"}</span>
-                    </div>
-                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5">
-                      <span className="text-amber-500/70 text-xs font-bold uppercase tracking-wider flex mb-1 items-center gap-2"><Sun className="w-3 h-3"/> Sun Direction</span>
-                      <span className="text-amber-400 font-medium">{profile?.sunDirection || "Unspecified"}</span>
-                    </div>
-                    <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5">
-                      <span className="text-blue-500/70 text-xs font-bold uppercase tracking-wider flex mb-1 items-center gap-2"><Zap className="w-3 h-3"/> Power Supply</span>
-                      <span className="text-blue-400 font-medium">{profile?.powerSupply || "Unspecified"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5">
-                    <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider flex mb-1 items-center gap-2"><VolumeX className="w-3 h-3"/> Sound & Lighting Conditions</span>
-                    <p className="text-white font-medium mb-2"><span className="text-zinc-500 text-sm">Sound:</span> {profile?.soundConditions || "Unspecified"}</p>
-                    <p className="text-white font-medium"><span className="text-zinc-500 text-sm">Light:</span> {profile?.lightingConditions || "Unspecified"}</p>
-                  </div>
-                  
-                  {profile?.restrictions && (
-                    <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5 flex gap-4">
-                      <AlertTriangle className="w-6 h-6 text-red-500 shrink-0" />
-                      <div>
-                        <span className="text-red-500/70 text-xs font-bold uppercase tracking-wider block mb-1">Restrictions & Rules</span>
-                        <p className="text-red-400 font-medium whitespace-pre-wrap">{profile.restrictions}</p>
+                    {listing.locationProfile && (
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm font-medium">{listing.locationProfile.address || "Bahrain"}</span>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-            
-            <div className="h-px w-full bg-white/10"></div>
-            
-            <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 flex gap-4">
-              <ShieldCheck className="w-8 h-8 text-amber-500 shrink-0" />
-              <div>
-                <h4 className="font-bold text-amber-500 mb-1">Kader Protection Guarantee</h4>
-                <p className="text-zinc-400 text-sm">Payments are held securely in escrow. Funds are strictly released after a successful shoot or verified hand-off.</p>
-              </div>
+                    )}
+                 </div>
+               </div>
+               
+               <div className="prose prose-invert prose-lg max-w-none">
+                 <p className="text-zinc-400 leading-relaxed">{listing.description}</p>
+               </div>
             </div>
           </div>
 
-          <div className="w-full lg:w-100 shrink-0">
-            <BookingWidget 
-              projects={projects} 
-              listingId={listing.id} 
-              pricePerDay={listing.pricePerDay} 
-              userId={userId} 
-            />
+          {/* RIGHT: ACTION CARD */}
+          <div className="px-4 md:px-0">
+             <div className="sticky top-8 bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
+                <div className="flex items-end justify-between mb-8 pb-8 border-b border-white/5">
+                   <div>
+                     <p className="text-zinc-500 font-bold uppercase tracking-wider text-xs mb-1">Daily Rate</p>
+                     <p className="text-4xl font-black text-white">{listing.pricePerDay} <span className="text-lg text-amber-500">BHD</span></p>
+                   </div>
+                   <div className="text-right">
+                     <p className="text-zinc-500 font-bold uppercase tracking-wider text-xs mb-1">Provider</p>
+                     <div className="flex items-center gap-2 justify-end">
+                       <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold">
+                         {listing.user.name?.[0] || "K"}
+                       </div>
+                       <p className="text-sm font-bold text-white">{listing.user.name || "Kader Agent"}</p>
+                     </div>
+                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-blue-200 text-sm font-bold mb-1">Kader Secure</p>
+                      <p className="text-blue-500/60 text-xs leading-relaxed">Funds held in Escrow until you verify the condition of this item.</p>
+                    </div>
+                  </div>
+
+                  {/* THE BRIDGE COMPONENT */}
+                  <AddToProject 
+                    listingId={listing.id} 
+                    projects={userProjects} 
+                    price={listing.pricePerDay} 
+                  />
+                  
+                  <p className="text-center text-zinc-600 text-[10px] uppercase tracking-widest font-bold mt-4">
+                    Transaction Fee: 10%
+                  </p>
+                </div>
+             </div>
           </div>
 
         </div>
