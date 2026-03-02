@@ -54,7 +54,7 @@ export default async function ProviderDashboard() {
             <p className="text-zinc-500 font-medium">Manage incoming requests for your Gear, Locations, and Talent.</p>
           </div>
           <div className="flex gap-4">
-            <Link href="/dashboard/mission-control" className="px-5 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/5 transition-colors cursor-none">
+            <Link href="/dashboard" className="px-5 py-2.5 bg-zinc-900 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/5 transition-colors cursor-none">
               Mission Control
             </Link>
             <div className="px-5 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-2">
