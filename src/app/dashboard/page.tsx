@@ -20,7 +20,11 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
 
   const dbUser = await db.user.findUnique({
     where: { clerkId: userId },
-    include: { listings: { where: { visibility: { not: "ARCHIVED" } } }, projects: true, services: true }
+    include: { 
+      listings: { where: { visibility: { not: "ARCHIVED" } } }, 
+      projects: true, 
+      services: true 
+    }
   });
 
   if (!dbUser) redirect("/");
@@ -37,72 +41,73 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
 
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row">
+      {/* MOBILE HEADER */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0a] sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-bold text-black">K</div>
-            <span className="font-bold tracking-tight">Mission Control</span>
-          </Link>
-        </div>
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-bold text-black">K</div>
+          <span className="font-bold tracking-tight">Mission Control</span>
+        </Link>
         <div className="flex items-center gap-4">
           <RoleSwitch isProvider={isProvider} />
           <UserButton />
         </div>
       </div>
       
-      {/* Mobile Tab Bar */}
+      {/* MOBILE TAB BAR */}
       <div className="md:hidden flex overflow-x-auto border-b border-white/5 bg-[#0a0a0a] sticky top-[65px] z-40 no-scrollbar">
          <nav className="flex px-4 py-2 gap-2">
-            <Link href="/dashboard?tab=overview" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'overview' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Overview</Link>
+            <Link href="/dashboard?tab=overview" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'overview' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Overview</Link>
             {isProvider ? (
               <>
-                <Link href="/dashboard?tab=inventory" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'inventory' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Inventory</Link>
-                <Link href="/dashboard?tab=calendar" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'calendar' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Schedule</Link>
+                <Link href="/dashboard?tab=inventory" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'inventory' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Inventory</Link>
+                <Link href="/dashboard?tab=calendar" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'calendar' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Schedule</Link>
               </>
             ) : (
               <>
-                <Link href="/dashboard?tab=projects" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'projects' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Projects</Link>
-                <Link href="/dashboard?tab=saved" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'saved' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Saved</Link>
+                <Link href="/dashboard?tab=projects" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'projects' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Projects</Link>
+                <Link href="/dashboard?tab=saved" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'saved' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Saved</Link>
               </>
             )}
-            <Link href="/dashboard?tab=settings" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'settings' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Settings</Link>
+            <Link href="/dashboard?tab=settings" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'settings' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Settings</Link>
          </nav>
       </div>
 
-      <aside className="w-full md:w-72 border-r border-white/5 bg-[#0a0a0a] flex flex-col shrink-0 md:h-screen sticky top-0 z-20">
-        <div className="hidden md:flex p-8 items-center gap-3">
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex w-72 border-r border-white/5 bg-[#0a0a0a] flex-col shrink-0 h-screen sticky top-0 z-20">
+        <div className="p-8 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center font-bold text-black text-xl">K</div>
           <span className="text-xl font-bold tracking-tighter text-white">Mission Control</span>
         </div>
-        <nav className="flex-1 px-4 flex flex-col gap-1.5 md:mt-2 pb-6">
+        <nav className="flex-1 px-4 flex flex-col gap-1.5 pb-6">
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-4">Personal</p>
-          <Link href="/dashboard?tab=overview" scroll={false} className={getTabClass("overview")}><LayoutGrid className="w-5 h-5" /> Overview</Link>
+          <Link href="/dashboard?tab=overview" className={getTabClass("overview")}><LayoutGrid className="w-5 h-5" /> Overview</Link>
           {!isProvider ? (
             <>
-              <Link href="/dashboard?tab=projects" scroll={false} className={getTabClass("projects")}><Film className="w-5 h-5" /> My Projects</Link>
-              <Link href="/dashboard?tab=saved" scroll={false} className={getTabClass("saved")}><Bookmark className="w-5 h-5" /> Saved Items</Link>
+              <Link href="/dashboard?tab=projects" className={getTabClass("projects")}><Film className="w-5 h-5" /> My Projects</Link>
+              <Link href="/dashboard?tab=saved" className={getTabClass("saved")}><Bookmark className="w-5 h-5" /> Saved Items</Link>
             </>
           ) : (
             <>
-              <Link href="/dashboard?tab=inventory" scroll={false} className={getTabClass("inventory")}><Briefcase className="w-5 h-5" /> My Inventory</Link>
-              <Link href="/dashboard?tab=calendar" scroll={false} className={getTabClass("calendar")}><Calendar className="w-5 h-5" /> Schedule</Link>
+              <Link href="/dashboard?tab=inventory" className={getTabClass("inventory")}><Briefcase className="w-5 h-5" /> My Inventory</Link>
+              <Link href="/dashboard?tab=calendar" className={getTabClass("calendar")}><Calendar className="w-5 h-5" /> Schedule</Link>
             </>
           )}
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-8">Identity</p>
-          <Link href="/dashboard?tab=settings" scroll={false} className={getTabClass("settings")}><UserCircle className="w-5 h-5" /> Profile Hub</Link>
+          <Link href="/dashboard?tab=settings" className={getTabClass("settings")}><UserCircle className="w-5 h-5" /> Profile Hub</Link>
           {isAdmin && (
             <>
               <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-8 text-blue-500">Kader Admin</p>
-              <Link href="/dashboard?tab=admin" scroll={false} className={getTabClass("admin")}><ShieldCheck className="w-5 h-5 text-blue-500" /> Control Center</Link>
+              <Link href="/dashboard?tab=admin" className={getTabClass("admin")}><ShieldCheck className="w-5 h-5 text-blue-500" /> Control Center</Link>
             </>
           )}
         </nav>
-        <div className="p-4 mt-auto border-t border-white/5 hidden md:block">
+        <div className="p-4 mt-auto border-t border-white/5">
           <RoleSwitch isProvider={isProvider} />
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-[#030303]">
+      <main className="flex-1 flex flex-col min-h-screen bg-[#030303]">
+        {/* DESKTOP HEADER */}
         <header className="hidden md:flex h-24 border-b border-white/5 px-10 items-center justify-between sticky top-0 z-10 bg-[#030303]/90 backdrop-blur-xl shrink-0">
           <div className="flex items-center bg-white/5 rounded-2xl px-5 py-3 w-[450px] border border-white/5 focus-within:border-amber-500/30 transition-all duration-300">
             <Search className="w-4 h-4 text-zinc-500 mr-3" />
@@ -111,6 +116,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
           <UserButton appearance={{ elements: { avatarBox: "w-11 h-11 border-2 border-amber-500/30" } }} />
         </header>
 
+        {/* CONTENT AREA */}
         <div className="p-6 md:p-12 max-w-7xl mx-auto w-full">
           {currentTab === "settings" && <ProfileSettings user={dbUser} />}
           {currentTab === "inventory" && <InventoryHub listings={dbUser.listings || []} />}
