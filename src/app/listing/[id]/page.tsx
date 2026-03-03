@@ -23,7 +23,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   if (!listing) notFound();
 
   // Fetch User's Projects for the Dropdown
-  let userProjects = [];
+  let userProjects: { id: string; title: string; status: string }[] = [];
   if (userId) {
     const dbUser = await db.user.findUnique({
       where: { clerkId: userId },

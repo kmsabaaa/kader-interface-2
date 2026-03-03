@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { Star, MapPin, Instagram, Linkedin, Globe, Play, Camera, Briefcase, Mail } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { auth } from "@clerk/nextjs/server";
 
 export default async function CreatorProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
+  const { userId } = await auth();
   const creator = await db.user.findUnique({
     where: { id: resolvedParams.id },
     include: {
@@ -106,9 +108,21 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
 
           {/* RIGHT: INVENTORY / GEAR */}
           <div className="space-y-8">
-             <button className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-5 rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(245,158,11,0.2)] active:scale-[0.98] transition-all">
-                <Mail className="w-5 h-5" /> Hire this Talent
-             </button>
+             {userId ? (
+               <Link
+                 href="/dashboard?tab=projects"
+                 className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-5 rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(245,158,11,0.2)] active:scale-[0.98] transition-all"
+               >
+                 <Mail className="w-5 h-5" /> Hire this Talent
+               </Link>
+             ) : (
+               <Link
+                 href="/sign-in"
+                 className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-5 rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(245,158,11,0.2)] active:scale-[0.98] transition-all"
+               >
+                 <Mail className="w-5 h-5" /> Sign in to Hire
+               </Link>
+             )}
 
              <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-8">
                 <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Camera className="w-5 h-5 text-blue-500" /> Equipment Vault</h3>

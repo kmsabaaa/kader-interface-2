@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Camera, MapPin, Trash2, Edit3, MoreVertical } from 'lucide-react';
+import { Camera, MapPin, Trash2, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import NewListingModal from './NewListingModal';
+import EditListingModal from './EditListingModal';
 import { deleteListing } from './actions';
 
 export default function InventoryHub({ listings }: { listings: any[] }) {
@@ -73,9 +74,7 @@ export default function InventoryHub({ listings }: { listings: any[] }) {
 
                 {/* Responsive Action Bar */}
                 <div className="grid grid-cols-2 gap-3 pt-6 border-t border-white/5">
-                   <button className="flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition-all border border-white/5">
-                      <Edit3 className="w-3.5 h-3.5" /> Edit
-                   </button>
+                   <EditListingModal listing={item} />
                    <button
                       onClick={() => handleDelete(item.id)}
                       disabled={deletingId === item.id}

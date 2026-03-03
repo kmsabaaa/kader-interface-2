@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
  */
 export async function updateRequestStatus(
   requestId: string,
-  newStatus: "APPROVED" | "DENIED" | "COMPLETED"
+  newStatus: "ACCEPTED" | "CANCELLED" | "COMPLETED"
 ) {
   try {
     const { userId } = await auth();
