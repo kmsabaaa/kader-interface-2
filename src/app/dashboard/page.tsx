@@ -111,6 +111,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
         </header>
 
         <div className="p-6 md:p-12 max-w-7xl mx-auto w-full">
+          {/* Debugging: {currentTab} */}
           {currentTab === "overview" && (
             <div key="overview" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-12">Welcome, {user?.firstName}.</h1>
@@ -118,7 +119,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
                      <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">{isProvider ? "MARKET INVENTORY" : "LIVE PRODUCTIONS"}</h3>
-                     <p className="text-6xl font-black">{isProvider ? dbUser.listings.length : dbUser.projects.length}</p>
+                     <p className="text-6xl font-black">{isProvider ? (dbUser.listings?.length || 0) : (dbUser.projects?.length || 0)}</p>
                   </div>
                   <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
                      <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">ESCROW BALANCE</h3>
@@ -128,8 +129,8 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
             </div>
           )}
           {currentTab === "settings" && <div key="settings"><ProfileSettings user={dbUser} /></div>}
-          {currentTab === "inventory" && <div key="inventory"><InventoryHub listings={dbUser.listings} /></div>}
-          {currentTab === "projects" && <div key="projects"><ProjectsHub projects={dbUser.projects} /></div>}
+          {currentTab === "inventory" && <div key="inventory"><InventoryHub listings={dbUser.listings || []} /></div>}
+          {currentTab === "projects" && <div key="projects"><ProjectsHub projects={dbUser.projects || []} /></div>}
           {currentTab === "saved" && (
             <div key="saved" className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
                <Bookmark className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
@@ -143,6 +144,14 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
             </div>
           )}
           {currentTab === "admin" && isAdmin && <div key="admin" className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>}
+          
+          {/* CATCH-ALL: If currentTab is invalid or doesn't match above */}
+          {!["overview", "settings", "inventory", "projects", "saved", "calendar", "admin"].includes(currentTab) && (
+            <div className="py-24 text-center">
+              <p className="text-zinc-500">Redirecting to Overview...</p>
+              {/* Force redirect in client-side or just show overview */}
+            </div>
+          )}
         </div>
       </main>
     </div>
