@@ -160,6 +160,8 @@ model CallSheetItem {
   updatedAt DateTime          @updatedAt
 
   @@index([projectId])
+  @@index([listingId])
+  @@index([serviceId])
 }
 
 model Review {
@@ -175,6 +177,8 @@ model Review {
   createdAt    DateTime @default(now())
 
   @@index([listingId])
+  @@index([targetUserId])
+  @@index([authorId])
 }
 
 model LocationProfile {
