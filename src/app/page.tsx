@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -14,132 +14,83 @@ const Hero3D = dynamic(() => import("./components/Hero3D"), {
 });
 
 export default function Home() {
-  const comp = useRef<HTMLElement>(null);
-  const lenisRef = useRef<any>(null);
-  const lenisTickerRef = useRef<((time: number) => void) | null>(null);
-  const mmRef = useRef<any>(null);
-
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     // Kill any leftover ScrollTriggers from a previous visit before initializing
     ScrollTrigger.getAll().forEach(t => t.kill());
 
-    const initGSAP = async () => {
-      // 2. Import Lenis dynamically inside useEffect
-      const Lenis = (await import("@studio-freight/lenis")).default;
-      const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      });
-
-      const tickerFn = (time: number) => { lenis.raf(time * 1000); };
-      lenis.on('scroll', ScrollTrigger.update);
-      gsap.ticker.add(tickerFn);
-      gsap.ticker.lagSmoothing(0);
-
-      lenisRef.current = lenis;
-      lenisTickerRef.current = tickerFn;
-    };
-
-    initGSAP();
-
-    const mm = gsap.matchMedia();
-    mmRef.current = mm;
-
-    const ctx = gsap.context(() => {
-      // Hero Title Animation
-      const revealNodes = gsap.utils.toArray(".reveal");
-      if (revealNodes.length) {
-        gsap.fromTo(
-          revealNodes,
-          { y: 50, opacity: 0, scale: 0.95 },
-          { y: 0, opacity: 1, scale: 1, duration: 1.2, stagger: 0.1, ease: "power3.out" }
-        );
-      }
-
-      // Bento Box Animation
-      const bentoCards = gsap.utils.toArray(".bento-card");
-      const bentoGrid = document.querySelector(".bento-grid");
-      if (bentoCards.length && bentoGrid) {
-        gsap.fromTo(
-          bentoCards,
-          { y: 100, opacity: 0, scale: 0.9 },
-          {
-            y: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 1,
-            stagger: 0.2,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: bentoGrid,
-              start: "top 85%",
-              toggleActions: "play none none reverse"
-            }
-          }
-        );
-      }
-
-      // Horizontal Scroll (Desktop only for performance)
-      mm.add("(min-width: 1024px)", () => {
-        const track = document.querySelector(".horizontal-track") as HTMLElement;
-        const wrapper = document.querySelector(".horizontal-wrapper") as HTMLElement;
-        if (track && wrapper) {
-          // Reset any leftover inline styles from a previous pin
-          gsap.set(track, { clearProps: "x,transform" });
-          gsap.to(track, {
-            x: () => -(track.scrollWidth - window.innerWidth),
-            ease: "none",
-            scrollTrigger: {
-              trigger: wrapper,
-              start: "top top",
-              end: () => `+=${track.scrollWidth}`,
-              scrub: 1,
-              pin: true,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
-              refreshPriority: 1
-            }
-          });
-        }
-
-        return () => {
-          ScrollTrigger.getAll().forEach(t => {
-            if (t.trigger === document.querySelector(".horizontal-wrapper")) {
-              t.kill();
-            }
-          });
-        };
-      });
-
-    }, comp);
-
-    // Scroll to top and refresh ScrollTrigger after DOM settles
+    // Scroll to top before setting up animations
     window.scrollTo(0, 0);
+
+    // Hero Title Animation
+    gsap.fromTo(
+      ".reveal",
+      { y: 50, opacity: 0, scale: 0.95 },
+      { y: 0, opacity: 1, scale: 1, duration: 1.2, stagger: 0.1, ease: "power3.out" }
+    );
+
+    // Bento Box Animation
+    const bentoGrid = document.querySelector(".bento-grid");
+    if (bentoGrid) {
+      gsap.fromTo(
+        ".bento-card",
+        { y: 100, opacity: 0, scale: 0.9 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 1,
+          stagger: 0.2,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: bentoGrid,
+            start: "top 85%",
+            toggleActions: "play none none reverse"
+          }
+        }
+      );
+    }
+
+    // Horizontal Scroll — Desktop only
+    let horizontalTrigger: ScrollTrigger | null = null;
+    if (window.innerWidth >= 1024) {
+      const track = document.querySelector(".horizontal-track") as HTMLElement;
+      const wrapper = document.querySelector(".horizontal-wrapper") as HTMLElement;
+      if (track && wrapper) {
+        gsap.set(track, { clearProps: "all" });
+        const tween = gsap.to(track, {
+          x: () => -(track.scrollWidth - window.innerWidth),
+          ease: "none",
+          scrollTrigger: {
+            trigger: wrapper,
+            start: "top top",
+            end: () => `+=${track.scrollWidth}`,
+            scrub: 1,
+            pin: true,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          }
+        });
+        horizontalTrigger = tween.scrollTrigger ?? null;
+      }
+    }
+
     const timer = setTimeout(() => {
       ScrollTrigger.refresh(true);
-    }, 300);
+    }, 150);
 
     return () => {
       clearTimeout(timer);
-      // Kill all scroll triggers first
+      if (horizontalTrigger) horizontalTrigger.kill();
       ScrollTrigger.getAll().forEach(t => t.kill());
-      // Revert matchMedia
-      if (mmRef.current) mmRef.current.revert();
-      // Revert GSAP context (also removes pin spacers)
-      ctx.revert();
-      // Remove Lenis ticker and destroy instance
-      if (lenisTickerRef.current) gsap.ticker.remove(lenisTickerRef.current);
-      if (lenisRef.current) lenisRef.current.destroy();
-      lenisRef.current = null;
-      lenisTickerRef.current = null;
+      gsap.set(".horizontal-track", { clearProps: "all" });
     };
   }, []);
 
   return (
     <>
-      <main ref={comp} className="relative z-10 bg-[#030303] md:mb-[80vh] shadow-[0_20px_50px_rgba(0,0,0,1)] text-white font-sans selection:bg-amber-500/30 overflow-hidden">
+      <main className="relative z-10 bg-[#030303] md:mb-[80vh] shadow-[0_20px_50px_rgba(0,0,0,1)] text-white font-sans selection:bg-amber-500/30 overflow-x-hidden">
         
         {/* HERO SECTION */}
         <section className="relative h-screen flex flex-col items-center justify-center">
