@@ -16,7 +16,8 @@ export default function Navbar() {
 
   useEffect(() => {
     setIsOpen(false);
-    setHidden(false); // Reset visibility on route change
+    setHidden(false);
+    setIsScrolled(false); // Reset scroll state on route change so nav re-evaluates
   }, [pathname]);
 
   useMotionValueEvent(scrollY, "change", (latest) => {

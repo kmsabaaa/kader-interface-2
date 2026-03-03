@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { updateCreatorProfile } from './actions';
 import { User, Instagram, Linkedin, Globe, MapPin, Video, Save } from 'lucide-react';
 
-export default function ProfileSettings({ user }: { user: any }) {
+export default function ProfileSettings({ user, isProvider }: { user: any; isProvider: boolean }) {
   const [loading, setLoading] = useState(false);
 
   return (
@@ -15,8 +15,12 @@ export default function ProfileSettings({ user }: { user: any }) {
             <User className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">Creator Identity</h2>
-            <p className="text-zinc-500 text-sm font-medium">Control how you appear to directors and producers.</p>
+            <h2 className="text-2xl font-bold">{isProvider ? "Creator Identity" : "Account Profile"}</h2>
+            <p className="text-zinc-500 text-sm font-medium">
+              {isProvider
+                ? "Control how you appear to directors and producers."
+                : "Manage your profile and account preferences."}
+            </p>
           </div>
         </div>
 

@@ -22,6 +22,9 @@ export default function Home() {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
+    // Kill any leftover ScrollTriggers from a previous visit before initializing
+    ScrollTrigger.getAll().forEach(t => t.kill());
+
     const initGSAP = async () => {
       // 2. Import Lenis dynamically inside useEffect
       const Lenis = (await import("@studio-freight/lenis")).default;
@@ -83,6 +86,8 @@ export default function Home() {
         const track = document.querySelector(".horizontal-track") as HTMLElement;
         const wrapper = document.querySelector(".horizontal-wrapper") as HTMLElement;
         if (track && wrapper) {
+          // Reset any leftover inline styles from a previous pin
+          gsap.set(track, { clearProps: "x,transform" });
           gsap.to(track, {
             x: () => -(track.scrollWidth - window.innerWidth),
             ease: "none",
@@ -110,21 +115,19 @@ export default function Home() {
 
     }, comp);
 
-    // Force a global cleanup and refresh on every visit
+    // Scroll to top and refresh ScrollTrigger after DOM settles
+    window.scrollTo(0, 0);
     const timer = setTimeout(() => {
-      window.scrollTo(0, 0);
-      ScrollTrigger.clearScrollMemory();
       ScrollTrigger.refresh(true);
-    }, 500);
+    }, 300);
 
     return () => {
       clearTimeout(timer);
       // Kill all scroll triggers first
       ScrollTrigger.getAll().forEach(t => t.kill());
-      ScrollTrigger.clearScrollMemory();
       // Revert matchMedia
       if (mmRef.current) mmRef.current.revert();
-      // Revert GSAP context
+      // Revert GSAP context (also removes pin spacers)
       ctx.revert();
       // Remove Lenis ticker and destroy instance
       if (lenisTickerRef.current) gsap.ticker.remove(lenisTickerRef.current);

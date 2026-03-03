@@ -13,6 +13,7 @@ import QuickActions from "./QuickActions";
 import ProjectsHub from "./ProjectsHub";
 import AvailabilityCalendar from "./AvailabilityCalendar";
 import AnalyticsHub from "./AnalyticsHub";
+import AddTestFunds from "./AddTestFunds";
 
 export default async function Dashboard(props: { searchParams: Promise<{ tab?: string }> }) {
   const searchParamsValue = await props.searchParams;
@@ -184,8 +185,10 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
       {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:flex w-72 border-r border-white/5 bg-[#0a0a0a] flex-col shrink-0 h-screen sticky top-0 z-20">
         <div className="p-8 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center font-bold text-black text-xl">K</div>
-          <span className="text-xl font-bold tracking-tighter text-white">Mission Control</span>
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center font-bold text-black text-xl">K</div>
+            <span className="text-xl font-bold tracking-tighter text-white">Mission Control</span>
+          </Link>
         </div>
         <nav className="flex-1 px-4 flex flex-col gap-1.5 pb-6 overflow-y-auto">
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-4">Personal</p>
@@ -228,7 +231,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
 
         {/* CONTENT AREA */}
         <div className="p-6 md:p-12 max-w-7xl mx-auto w-full">
-          {currentTab === "settings" && <ProfileSettings user={dbUser} />}
+          {currentTab === "settings" && <ProfileSettings user={dbUser} isProvider={isProvider} />}
           {currentTab === "inventory" && <InventoryHub listings={dbUser.listings || []} />}
           {currentTab === "projects" && <ProjectsHub projects={dbUser.projects || []} />}
           {currentTab === "saved" && (
@@ -263,7 +266,8 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
                   </div>
                   <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group">
                      <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">ESCROW BALANCE</h3>
-                     <p className="text-5xl md:text-6xl font-black text-emerald-400">0.00 <span className="text-sm text-zinc-600 font-bold uppercase tracking-tighter">BHD</span></p>
+                     <p className="text-5xl md:text-6xl font-black text-emerald-400">{dbUser.walletBalance.toFixed(2)} <span className="text-sm text-zinc-600 font-bold uppercase tracking-tighter">BHD</span></p>
+                     <AddTestFunds currentBalance={dbUser.walletBalance} />
                   </div>
                </div>
             </div>
