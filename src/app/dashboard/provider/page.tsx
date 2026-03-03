@@ -40,8 +40,8 @@ export default async function ProviderDashboard() {
   });
 
   // Organize by status
-  const pending = incomingRequests.filter(r => r.status === "PENDING");
-  const approved = incomingRequests.filter(r => r.status === "APPROVED");
+  const pending = incomingRequests.filter(r => r.status === "REQUESTED");
+  const approved = incomingRequests.filter(r => r.status === "ACCEPTED");
 
   return (
     <div className="min-h-screen bg-[#030303] text-white pt-24 pb-20 px-6">
@@ -113,7 +113,7 @@ export default async function ProviderDashboard() {
                       <div className="flex md:flex-col gap-2 shrink-0 justify-center">
                         <form action={async () => {
                           "use server";
-                          await updateRequestStatus(req.id, "APPROVED");
+                          await updateRequestStatus(req.id, "ACCEPTED");
                         }}>
                           <button className="w-full bg-emerald-500 text-black font-black text-xs px-4 py-2 rounded-lg hover:bg-emerald-400 transition-colors flex items-center justify-center gap-2 cursor-none">
                             <CheckCircle className="w-4 h-4" /> Approve
@@ -121,7 +121,7 @@ export default async function ProviderDashboard() {
                         </form>
                         <form action={async () => {
                           "use server";
-                          await updateRequestStatus(req.id, "DENIED");
+                          await updateRequestStatus(req.id, "CANCELLED");
                         }}>
                           <button className="w-full bg-red-500/10 border border-red-500/20 text-red-500 font-bold text-xs px-4 py-2 rounded-lg hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 cursor-none">
                             <XCircle className="w-4 h-4" /> Deny

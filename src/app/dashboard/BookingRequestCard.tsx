@@ -31,11 +31,11 @@ export default function BookingRequestCard({ req }: BookingRequestCardProps) {
   const totalEarn = itemPrice * rentalDays;
 
   const handleDecline = async (formData: FormData) => {
-    return await respondToBooking(req.id, "DECLINED");
+    return await respondToBooking(req.id, "DECLINE");
   };
 
   const handleApprove = async (formData: FormData) => {
-    return await respondToBooking(req.id, "APPROVED");
+    return await respondToBooking(req.id, "APPROVE");
   };
 
   const [declineState, declineAction, isDeclinePending] = useActionState(

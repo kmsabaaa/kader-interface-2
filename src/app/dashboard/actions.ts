@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "../../lib/db";
 import { revalidatePath } from "next/cache";
+import { ListingType } from "@prisma/client";
 
 export async function updateCreatorProfile(formData: FormData) {
   const { userId } = await auth();
@@ -36,14 +37,12 @@ export async function createListing(formData: FormData) {
   const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
   if (!dbUser) throw new Error("User not found");
 
-  const type = formData.get("type") as string;
-  
   await db.listing.create({
     data: {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       pricePerDay: parseFloat(formData.get("pricePerDay") as string),
-      type,
+      type: formData.get("type") as ListingType,
       imageUrl: formData.get("imageUrl") as string,
       userId: dbUser.id,
       visibility: "PUBLISHED",
@@ -114,7 +113,7 @@ export async function createNewListing(formData: FormData) {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       pricePerDay: parseFloat(formData.get("pricePerDay") as string),
-      type: formData.get("type") as string,
+      type: formData.get("type") as ListingType,
       imageUrl: formData.get("imageUrl") as string,
       userId: dbUser.id,
       visibility: "PUBLISHED"
@@ -167,4 +166,107 @@ export async function deleteListing(listingId: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/search");
+}
+
+export async function updateListing(listingId: string, formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) throw new Error("User not found");
+
+  const listing = await db.listing.findUnique({ where: { id: listingId } });
+  if (!listing) throw new Error("Listing not found");
+  if (listing.userId !== dbUser.id) throw new Error("You do not own this listing");
+
+  const title = formData.get("title") as string;
+  const description = formData.get("description") as string;
+  const pricePerDay = parseFloat(formData.get("pricePerDay") as string);
+
+  if (!title || isNaN(pricePerDay)) throw new Error("Title is required and price must be a valid number.");
+
+  await db.listing.update({
+    where: { id: listingId },
+    data: { title, description, pricePerDay },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/search");
+}
+
+export async function respondToBooking(
+  requestId: string,
+  action: "APPROVE" | "DECLINE"
+) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) return { error: "User not found" };
+
+  const request = await db.callSheetItem.findUnique({
+    where: { id: requestId },
+    include: {
+      listing: { select: { userId: true } },
+      service: { select: { userId: true } },
+    },
+  });
+
+  if (!request) return { error: "Request not found" };
+
+  const ownerId = request.listing?.userId || request.service?.userId;
+  if (ownerId !== dbUser.id) return { error: "You do not own this resource" };
+
+  const newStatus = action === "APPROVE" ? "ACCEPTED" : "CANCELLED";
+
+  await db.callSheetItem.update({
+    where: { id: requestId },
+    data: { status: newStatus },
+  });
+
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function submitReview(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) return { error: "User not found" };
+
+  const listingId = formData.get("listingId") as string | null;
+  const targetUserId = formData.get("targetUserId") as string | null;
+  const ratingRaw = parseInt(formData.get("rating") as string, 10);
+  const comment = (formData.get("comment") as string)?.trim() || "";
+
+  if (isNaN(ratingRaw) || ratingRaw < 1 || ratingRaw > 5) {
+    return { error: "Rating must be between 1 and 5." };
+  }
+  const rating = ratingRaw;
+
+  if (!listingId && !targetUserId) {
+    return { error: "Review must target a listing or a user." };
+  }
+
+  if (listingId) {
+    const existing = await db.review.findFirst({
+      where: { listingId, authorId: dbUser.id },
+    });
+    if (existing) return { error: "You have already reviewed this listing." };
+  }
+
+  await db.review.create({
+    data: {
+      rating,
+      comment,
+      ...(listingId ? { listingId } : {}),
+      ...(targetUserId ? { targetUserId } : {}),
+      authorId: dbUser.id,
+    },
+  });
+
+  if (listingId) revalidatePath(`/listing/${listingId}`);
+  if (targetUserId) revalidatePath(`/creator/${targetUserId}`);
+  return { success: true };
 }

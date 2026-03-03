@@ -188,6 +188,7 @@ model LocationProfile {
   powerSupply        String?  
   soundConditions    String?  
   lightingConditions String?  
+  parkingLink        String?
   permitStatus       String?  
   restrictions       String?  @db.Text 
   createdAt          DateTime @default(now())

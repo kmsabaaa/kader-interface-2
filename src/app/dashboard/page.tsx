@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutGrid, Film, Bookmark, Briefcase, Calendar, Wallet, CreditCard, Search, UserCircle, ShieldCheck } from "lucide-react";
+import { LayoutGrid, Film, Bookmark, Briefcase, Calendar, Search, UserCircle, ShieldCheck, TrendingUp } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { db } from "../../lib/db";
 import RoleSwitch from "./RoleSwitch";
@@ -9,6 +9,8 @@ import ProfileSettings from "./ProfileSettings";
 import InventoryHub from "./InventoryHub";
 import QuickActions from "./QuickActions";
 import ProjectsHub from "./ProjectsHub";
+import AvailabilityCalendar from "./AvailabilityCalendar";
+import AnalyticsHub from "./AnalyticsHub";
 
 export default async function Dashboard(props: { searchParams: Promise<{ tab?: string }> }) {
   const searchParamsValue = await props.searchParams;
@@ -32,12 +34,116 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
   const isProvider = dbUser.role === "PROVIDER";
   const isAdmin = userId === "user_3AISoqNWAgFtVmrDkNNht2tYeyB"; 
 
+  // ── Calendar Data (provider only) ──────────────────────────────────────────
+  let calendarBookings: any[] = [];
+  if (isProvider) {
+    calendarBookings = await db.callSheetItem.findMany({
+      where: {
+        OR: [
+          { listing: { userId: dbUser.id } },
+          { service: { userId: dbUser.id } }
+        ],
+        startDate: { not: null },
+      },
+      include: {
+        listing: { select: { title: true, type: true } },
+        service: { select: { title: true } },
+        project: { select: { title: true } },
+      },
+      orderBy: { startDate: "asc" },
+    });
+  }
+
+  // ── Analytics Data (provider only) ────────────────────────────────────────
+  const PROVIDER_REVENUE_SHARE = 0.9; // 10% platform fee
+  let analyticsData = {
+    totalEarnings: 0,
+    totalBookings: 0,
+    acceptedBookings: 0,
+    pendingBookings: 0,
+    completedBookings: 0,
+    listingCount: dbUser.listings?.length || 0,
+    serviceCount: dbUser.services?.length || 0,
+    reviewCount: 0,
+    averageRating: 0,
+    earningsByMonth: [] as { month: string; amount: number }[],
+    topListings: [] as { title: string; bookingCount: number; earnings: number }[],
+  };
+
+  if (isProvider) {
+    const allBookings = await db.callSheetItem.findMany({
+      where: {
+        OR: [
+          { listing: { userId: dbUser.id } },
+          { service: { userId: dbUser.id } }
+        ],
+      },
+      include: {
+        listing: { select: { title: true, pricePerDay: true } },
+        service: { select: { title: true, pricePerDay: true } },
+      },
+    });
+
+    analyticsData.totalBookings = allBookings.length;
+    analyticsData.acceptedBookings = allBookings.filter(b => b.status === "ACCEPTED" || b.status === "ESCROW_FUNDED").length;
+    analyticsData.pendingBookings = allBookings.filter(b => b.status === "REQUESTED").length;
+    analyticsData.completedBookings = allBookings.filter(b => b.status === "COMPLETED").length;
+
+    // Earnings from completed + accepted bookings
+    const earnableBookings = allBookings.filter(b =>
+      b.status === "ACCEPTED" || b.status === "ESCROW_FUNDED" || b.status === "COMPLETED"
+    );
+    earnableBookings.forEach(b => {
+      analyticsData.totalEarnings += b.totalCost * PROVIDER_REVENUE_SHARE;
+    });
+
+    // Earnings by month (last 6 months)
+    const now = new Date();
+    const months: { month: string; amount: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthLabel = d.toLocaleDateString("en-US", { month: "short" });
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      const monthEarnings = earnableBookings
+        .filter(b => b.createdAt >= monthStart && b.createdAt <= monthEnd)
+        .reduce((sum, b) => sum + b.totalCost * PROVIDER_REVENUE_SHARE, 0);
+      months.push({ month: monthLabel, amount: monthEarnings });
+    }
+    analyticsData.earningsByMonth = months;
+
+    // Top listings by booking count
+    const listingBookingMap: Record<string, { title: string; count: number; earnings: number }> = {};
+    earnableBookings.forEach(b => {
+      const key = b.listingId || b.serviceId || "unknown";
+      const title = b.listing?.title || b.service?.title || "Unknown";
+      if (!listingBookingMap[key]) listingBookingMap[key] = { title, count: 0, earnings: 0 };
+      listingBookingMap[key].count += 1;
+      listingBookingMap[key].earnings += b.totalCost * PROVIDER_REVENUE_SHARE;
+    });
+    analyticsData.topListings = Object.values(listingBookingMap)
+      .sort((a, b) => b.earnings - a.earnings)
+      .slice(0, 5)
+      .map(v => ({ title: v.title, bookingCount: v.count, earnings: v.earnings }));
+
+    // Reviews
+    const reviews = await db.review.findMany({
+      where: { listing: { userId: dbUser.id } },
+    });
+    analyticsData.reviewCount = reviews.length;
+    if (reviews.length > 0) {
+      analyticsData.averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    }
+  }
+
   const getTabClass = (tabName: string) => {
     const isActive = currentTab === tabName;
     return isActive
       ? "flex items-center gap-3 px-4 py-3 bg-amber-500 text-black rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20"
       : "flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl font-medium transition-colors";
   };
+
+  const ALL_TABS = ["settings", "inventory", "projects", "saved", "calendar", "analytics", "admin"];
 
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row">
@@ -61,6 +167,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
               <>
                 <Link href="/dashboard?tab=inventory" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'inventory' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Inventory</Link>
                 <Link href="/dashboard?tab=calendar" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'calendar' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Schedule</Link>
+                <Link href="/dashboard?tab=analytics" className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'analytics' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Analytics</Link>
               </>
             ) : (
               <>
@@ -78,7 +185,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
           <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center font-bold text-black text-xl">K</div>
           <span className="text-xl font-bold tracking-tighter text-white">Mission Control</span>
         </div>
-        <nav className="flex-1 px-4 flex flex-col gap-1.5 pb-6">
+        <nav className="flex-1 px-4 flex flex-col gap-1.5 pb-6 overflow-y-auto">
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-4">Personal</p>
           <Link href="/dashboard?tab=overview" className={getTabClass("overview")}><LayoutGrid className="w-5 h-5" /> Overview</Link>
           {!isProvider ? (
@@ -90,6 +197,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
             <>
               <Link href="/dashboard?tab=inventory" className={getTabClass("inventory")}><Briefcase className="w-5 h-5" /> My Inventory</Link>
               <Link href="/dashboard?tab=calendar" className={getTabClass("calendar")}><Calendar className="w-5 h-5" /> Schedule</Link>
+              <Link href="/dashboard?tab=analytics" className={getTabClass("analytics")}><TrendingUp className="w-5 h-5" /> Analytics</Link>
             </>
           )}
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-8">Identity</p>
@@ -127,27 +235,33 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Your library is currently empty</p>
             </div>
           )}
-          {currentTab === "calendar" && (
-            <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
-               <Calendar className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-               <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No upcoming shoots scheduled</p>
+          {currentTab === "calendar" && isProvider && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h1 className="text-3xl md:text-5xl font-black tracking-tighter mb-8">Booking Schedule</h1>
+              <AvailabilityCalendar bookings={calendarBookings} />
+            </div>
+          )}
+          {currentTab === "analytics" && isProvider && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h1 className="text-3xl md:text-5xl font-black tracking-tighter mb-8">Analytics</h1>
+              <AnalyticsHub data={analyticsData} />
             </div>
           )}
           {currentTab === "admin" && isAdmin && <div className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>}
           
           {/* DEFAULT / OVERVIEW */}
-          {(currentTab === "overview" || !["settings", "inventory", "projects", "saved", "calendar", "admin"].includes(currentTab)) && (
+          {(currentTab === "overview" || !ALL_TABS.includes(currentTab)) && (
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-               <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-12">Welcome, {user?.firstName}.</h1>
+               <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-8">Welcome, {user?.firstName}.</h1>
                <QuickActions isProvider={isProvider} />
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group">
                      <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">{isProvider ? "MARKET INVENTORY" : "LIVE PRODUCTIONS"}</h3>
-                     <p className="text-6xl font-black">{isProvider ? (dbUser.listings?.length || 0) : (dbUser.projects?.length || 0)}</p>
+                     <p className="text-5xl md:text-6xl font-black">{isProvider ? (dbUser.listings?.length || 0) : (dbUser.projects?.length || 0)}</p>
                   </div>
-                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
+                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group">
                      <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">ESCROW BALANCE</h3>
-                     <p className="text-6xl font-black text-emerald-400">0.00 <span className="text-sm text-zinc-600 font-bold uppercase tracking-tighter">BHD</span></p>
+                     <p className="text-5xl md:text-6xl font-black text-emerald-400">0.00 <span className="text-sm text-zinc-600 font-bold uppercase tracking-tighter">BHD</span></p>
                   </div>
                </div>
             </div>
