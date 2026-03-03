@@ -132,7 +132,7 @@ export default function Home() {
 
   return (
     <>
-      <main ref={comp} className="relative z-10 bg-[#030303] mb-[80vh] shadow-[0_20px_50px_rgba(0,0,0,1)] text-white font-sans selection:bg-amber-500/30 overflow-hidden">
+      <main ref={comp} className="relative z-10 bg-[#030303] md:mb-[80vh] shadow-[0_20px_50px_rgba(0,0,0,1)] text-white font-sans selection:bg-amber-500/30 overflow-hidden">
         
         {/* HERO SECTION */}
         <section className="relative h-screen flex flex-col items-center justify-center">
@@ -238,7 +238,7 @@ export default function Home() {
         </section>
 
         {/* HORIZONTAL FILMSTRIP (Only pinned on Desktop) */}
-        <section className="horizontal-wrapper relative min-h-screen bg-[#030303]">
+        <section className="horizontal-wrapper relative md:min-h-screen bg-[#030303]">
           <div className="lg:sticky top-0 h-auto lg:h-screen flex items-center overflow-hidden border-t border-white/5 py-24 lg:py-0">
             <div className="horizontal-track flex flex-col lg:flex-row gap-8 px-6 lg:px-[10vw] w-full lg:w-max">
               <div className="w-full lg:w-[40vw] flex flex-col justify-center pr-0 lg:pr-12">
@@ -279,7 +279,7 @@ export default function Home() {
       </main>
 
       {/* REVEAL FOOTER */}
-      <footer className="relative lg:fixed bottom-0 left-0 w-full lg:h-[80vh] z-0 bg-[#000000] flex flex-col justify-between pt-20 pb-10 px-8 lg:px-16 text-white overflow-hidden">
+      <footer className="relative md:fixed bottom-0 left-0 w-full md:h-[80vh] z-0 bg-[#000000] flex flex-col justify-between pt-20 pb-10 px-8 lg:px-16 text-white overflow-hidden">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 w-full max-w-7xl mx-auto border-b border-white/10 pb-12">
           <div className="flex flex-col gap-4">
             <h4 className="text-amber-500 font-bold mb-2">Ecosystem</h4>
