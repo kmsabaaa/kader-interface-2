@@ -45,47 +45,59 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
   }
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white pt-28 pb-20 selection:bg-amber-500/30">
-      <div className="max-w-7xl mx-auto px-6">
-        
-        {/* CINEMATIC HERO */}
-        <div className="relative h-[40vh] md:h-[50vh] w-full rounded-3xl overflow-hidden mb-12 border border-white/10 shadow-2xl">
-           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black"></div>
-           {/* Fallback pattern if no hero image */}
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#1a1a1a_0%,_#030303_100%)]"></div>
-           
-           <div className="absolute bottom-10 left-10 flex flex-col md:flex-row items-end gap-8 w-full pr-20">
-              <div className="w-32 h-32 md:w-44 md:h-44 rounded-2xl border-4 border-amber-500 bg-zinc-900 overflow-hidden shrink-0 shadow-2xl relative">
+    <div className="min-h-screen bg-[#030303] text-white pb-20 selection:bg-amber-500/30">
+      {/* AMBIENT GLOW */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[60vw] h-[40vw] rounded-full bg-amber-600/5 blur-[150px] pointer-events-none z-0" />
+      
+      <div className="relative z-10">
+        {/* CINEMATIC HERO — full bleed with profile anchored at bottom */}
+        <div className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-[#0d0d0d] to-[#030303]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_50%,_rgba(245,158,11,0.06)_0%,_transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_30%,_rgba(59,130,246,0.04)_0%,_transparent_60%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#030303]" />
+
+          {/* Bottom-anchored profile info */}
+          <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end gap-6">
+              {/* Avatar */}
+              <div className="w-28 h-28 md:w-40 md:h-40 rounded-3xl border-4 border-amber-500 bg-zinc-900 overflow-hidden shrink-0 shadow-[0_0_40px_rgba(245,158,11,0.3)] relative">
                 {creator.profileImage ? (
                   <Image src={creator.profileImage} alt={creator.name || ""} fill className="object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-zinc-700 bg-zinc-800">
+                  <div className="w-full h-full flex items-center justify-center text-4xl font-black text-zinc-700 bg-zinc-800">
                     {creator.name?.[0] || "C"}
                   </div>
                 )}
               </div>
-              <div className="grow">
+              {/* Name + title */}
+              <div className="flex-1 min-w-0 pb-1">
                 <div className="flex flex-wrap items-center gap-3 mb-2">
-                  <h1 className="text-4xl md:text-6xl font-black tracking-tighter">{creator.name || "Kader Creator"}</h1>
+                  <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white">{creator.name || "Kader Creator"}</h1>
                   <span className="px-3 py-1 bg-amber-500 text-black text-xs font-black rounded-full uppercase tracking-tighter shadow-[0_0_15px_rgba(245,158,11,0.5)]">Verified Pro</span>
                 </div>
-                <p className="text-xl md:text-2xl text-amber-400 font-medium mb-4">{creator.creatorTitle}</p>
-                <div className="flex flex-wrap gap-6 text-zinc-400 text-sm font-bold uppercase tracking-widest">
-                  <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-zinc-600" /> {creator.location || "Middle East"}</span>
-                  <span className="flex items-center gap-2">
+                <p className="text-xl md:text-2xl text-amber-400 font-medium mb-3">{creator.creatorTitle}</p>
+                <div className="flex flex-wrap gap-5 text-zinc-400 text-sm font-bold uppercase tracking-widest">
+                  <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-zinc-600" /> {creator.location || "Middle East"}</span>
+                  <span className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    {avgRating ? `${avgRating} (${creator.reviews.length} Reviews)` : "New · No reviews yet"}
+                    {avgRating ? `${avgRating} (${creator.reviews.length})` : "New · No reviews yet"}
                   </span>
                 </div>
               </div>
-              <div className="flex gap-3">
-                 {creator.instagram && <a href={creator.instagram} target="_blank" className="p-3 bg-white/5 hover:bg-amber-500 hover:text-black rounded-xl transition-all"><Instagram className="w-5 h-5" /></a>}
-                 {creator.linkedin && <a href={creator.linkedin} target="_blank" className="p-3 bg-white/5 hover:bg-amber-500 hover:text-black rounded-xl transition-all"><Linkedin className="w-5 h-5" /></a>}
-                 {creator.website && <a href={creator.website} target="_blank" className="p-3 bg-white/5 hover:bg-amber-500 hover:text-black rounded-xl transition-all"><Globe className="w-5 h-5" /></a>}
+              {/* Social links */}
+              <div className="flex gap-2 pb-1 shrink-0">
+                {creator.instagram && <a href={creator.instagram} target="_blank" rel="noopener noreferrer" className="p-3 bg-white/5 hover:bg-amber-500 hover:text-black rounded-xl transition-all border border-white/10 hover:border-amber-500"><Instagram className="w-5 h-5" /></a>}
+                {creator.linkedin && <a href={creator.linkedin} target="_blank" rel="noopener noreferrer" className="p-3 bg-white/5 hover:bg-amber-500 hover:text-black rounded-xl transition-all border border-white/10 hover:border-amber-500"><Linkedin className="w-5 h-5" /></a>}
+                {creator.website && <a href={creator.website} target="_blank" rel="noopener noreferrer" className="p-3 bg-white/5 hover:bg-amber-500 hover:text-black rounded-xl transition-all border border-white/10 hover:border-amber-500"><Globe className="w-5 h-5" /></a>}
               </div>
-           </div>
+            </div>
+          </div>
         </div>
 
+        {/* CONTENT */}
+        <div className="max-w-7xl mx-auto px-6 md:px-10 pt-10 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* LEFT: BIO & SHOWREEL */}

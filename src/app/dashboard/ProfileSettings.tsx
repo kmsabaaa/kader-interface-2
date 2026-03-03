@@ -6,6 +6,7 @@ import { User, Instagram, Linkedin, Globe, MapPin, Video, Save } from 'lucide-re
 
 export default function ProfileSettings({ user, isProvider }: { user: any; isProvider: boolean }) {
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   return (
     <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -24,12 +25,20 @@ export default function ProfileSettings({ user, isProvider }: { user: any; isPro
           </div>
         </div>
 
+        {saved && (
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-3">
+            <Save className="w-4 h-4 text-emerald-400 shrink-0" />
+            <p className="text-emerald-300 text-sm font-medium">Profile updated successfully!</p>
+          </div>
+        )}
+
         <form 
           action={async (formData) => {
             setLoading(true);
+            setSaved(false);
             await updateCreatorProfile(formData);
             setLoading(false);
-            alert("Profile updated successfully!");
+            setSaved(true);
           }}
           className="space-y-6"
         >

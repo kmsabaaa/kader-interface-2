@@ -271,7 +271,51 @@ export async function submitReview(formData: FormData) {
   return { success: true };
 }
 
-// ── TEST FUNDS (development / testing only) ───────────────────────────────────
+// ── REMOVE CALL-SHEET ITEM (cancel/remove a booked resource) ────────────────
+export async function removeCallSheetItem(itemId: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) return { error: "User not found" };
+
+  const item = await db.callSheetItem.findUnique({
+    where: { id: itemId },
+    include: { project: { select: { userId: true } } },
+  });
+
+  if (!item) return { error: "Resource not found" };
+  if (item.project.userId !== dbUser.id) return { error: "You do not own this project" };
+  if (["COMPLETED", "ESCROW_FUNDED"].includes(item.status)) {
+    return { error: "Cannot remove a completed or funded booking." };
+  }
+
+  await db.callSheetItem.delete({ where: { id: itemId } });
+
+  revalidatePath(`/project/${item.projectId}`);
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+// ── UPDATE PROJECT STATUS ─────────────────────────────────────────────────────
+export async function updateProjectStatus(projectId: string, status: string) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) return { error: "User not found" };
+
+  const project = await db.project.findUnique({ where: { id: projectId } });
+  if (!project) return { error: "Project not found" };
+  if (project.userId !== dbUser.id) return { error: "You do not own this project" };
+
+  await db.project.update({ where: { id: projectId }, data: { status } });
+
+  revalidatePath(`/project/${projectId}`);
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 export async function addTestFunds(amount: number = 100) {
   const { userId } = await auth();
   if (!userId) return { error: "Unauthorized" };
