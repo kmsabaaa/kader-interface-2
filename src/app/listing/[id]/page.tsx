@@ -2,9 +2,9 @@ import { db } from "@/lib/db";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { MapPin, ShieldCheck, Star, ArrowLeft } from "lucide-react";
+import { MapPin, Star, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import AddToProject from "./AddToProject";
+import BookingWidget from "./BookingWidget";
 import ReviewForm from "../../components/ReviewForm";
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
@@ -144,46 +144,14 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
 
-          {/* RIGHT: ACTION CARD */}
+          {/* RIGHT: BOOKING WIDGET */}
           <div className="px-4 md:px-0">
-             <div className="sticky top-8 bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-2xl">
-                <div className="flex items-end justify-between mb-8 pb-8 border-b border-white/5">
-                   <div>
-                     <p className="text-zinc-500 font-bold uppercase tracking-wider text-xs mb-1">Daily Rate</p>
-                     <p className="text-4xl font-black text-white">{listing.pricePerDay} <span className="text-lg text-amber-500">BHD</span></p>
-                   </div>
-                   <div className="text-right">
-                     <p className="text-zinc-500 font-bold uppercase tracking-wider text-xs mb-1">Provider</p>
-                     <div className="flex items-center gap-2 justify-end">
-                       <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold">
-                         {listing.user.name?.[0] || "K"}
-                       </div>
-                       <p className="text-sm font-bold text-white">{listing.user.name || "Kader Agent"}</p>
-                     </div>
-                   </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
-                    <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-blue-200 text-sm font-bold mb-1">Kader Secure</p>
-                      <p className="text-blue-500/60 text-xs leading-relaxed">Funds held in Escrow until you verify the condition of this item.</p>
-                    </div>
-                  </div>
-
-                  {/* THE BRIDGE COMPONENT */}
-                  <AddToProject 
-                    listingId={listing.id} 
-                    projects={userProjects} 
-                    price={listing.pricePerDay} 
-                  />
-                  
-                  <p className="text-center text-zinc-600 text-[10px] uppercase tracking-widest font-bold mt-4">
-                    Transaction Fee: 10%
-                  </p>
-                </div>
-             </div>
+             <BookingWidget
+               listingId={listing.id}
+               projects={userProjects}
+               pricePerDay={listing.pricePerDay}
+               userId={userId}
+             />
           </div>
 
         </div>

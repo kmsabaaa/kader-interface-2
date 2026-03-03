@@ -13,14 +13,19 @@ export default function Navbar() {
   const [hidden, setHidden] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [justNavigated, setJustNavigated] = useState(false);
 
   useEffect(() => {
     setIsOpen(false);
     setHidden(false);
-    setIsScrolled(false); // Reset scroll state on route change so nav re-evaluates
+    setIsScrolled(false);
+    setJustNavigated(true);
+    const t = setTimeout(() => setJustNavigated(false), 600);
+    return () => clearTimeout(t);
   }, [pathname]);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
+    if (justNavigated) return;
     const previous = scrollY.getPrevious() ?? 0;
     if (latest > previous && latest > 150 && !isOpen) {
       setHidden(true);

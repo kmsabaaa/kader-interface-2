@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@clerk/nextjs/server";
 import ReviewForm from "../../components/ReviewForm";
+import HireTalentModal from "./HireTalentModal";
 
 export default async function CreatorProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -24,13 +25,18 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
     ? (creator.reviews.reduce((sum, r) => sum + r.rating, 0) / creator.reviews.length).toFixed(1)
     : null;
 
-  // Check if current user has already reviewed this creator
+  // Check if current user has already reviewed this creator, and fetch their projects
   let dbUserId: string | null = null;
   let hasReviewed = false;
+  let userProjects: { id: string; title: string }[] = [];
   if (userId) {
-    const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+    const dbUser = await db.user.findUnique({
+      where: { clerkId: userId },
+      include: { projects: { where: { status: { not: "ARCHIVED" } }, select: { id: true, title: true } } }
+    });
     if (dbUser) {
       dbUserId = dbUser.id;
+      userProjects = dbUser.projects;
       const existing = await db.review.findFirst({
         where: { targetUserId: creator.id, authorId: dbUser.id },
       });
@@ -143,12 +149,12 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
           {/* RIGHT: INVENTORY / GEAR */}
           <div className="space-y-8">
              {userId ? (
-               <Link
-                 href="/dashboard?tab=projects"
-                 className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-5 rounded-2xl flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(245,158,11,0.2)] active:scale-[0.98] transition-all"
-               >
-                 <Mail className="w-5 h-5" /> Hire this Talent
-               </Link>
+               <HireTalentModal
+                 creatorId={creator.id}
+                 creatorName={creator.name || "this talent"}
+                 services={creator.services.map(s => ({ id: s.id, title: s.title, pricePerDay: s.pricePerDay }))}
+                 projects={userProjects}
+               />
              ) : (
                <Link
                  href="/sign-in"

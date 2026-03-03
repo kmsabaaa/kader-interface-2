@@ -33,6 +33,21 @@ export async function requestBooking(formData: FormData) {
 
     if (!listing) return { error: "Listing not found." };
 
+    // Check for date conflicts on this listing
+    const conflict = await db.callSheetItem.findFirst({
+      where: {
+        listingId,
+        status: { in: ["REQUESTED", "ACCEPTED", "ESCROW_FUNDED"] },
+        AND: [
+          { startDate: { lte: endDate } },
+          { endDate: { gte: startDate } },
+        ],
+      },
+    });
+    if (conflict) {
+      return { error: "These dates are already booked for this item. Please choose different dates." };
+    }
+
     // Calculate total cost
     const diff = endDate.getTime() - startDate.getTime();
     let days = Math.ceil(diff / (1000 * 3600 * 24));
