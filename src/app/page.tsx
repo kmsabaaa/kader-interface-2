@@ -87,7 +87,9 @@ export default function Home() {
       }
 
       // Horizontal Scroll (Desktop only for performance)
-      if (window.innerWidth > 1024) {
+      const mm = gsap.matchMedia();
+      
+      mm.add("(min-width: 1024px)", () => {
         const track = document.querySelector(".horizontal-track") as HTMLElement;
         if (track) {
           gsap.to(track, {
@@ -96,14 +98,15 @@ export default function Home() {
             scrollTrigger: {
               trigger: ".horizontal-wrapper",
               start: "top top",
-              end: "+=3000",
+              end: () => `+=${track.scrollWidth}`,
               scrub: 1,
               pin: true,
               invalidateOnRefresh: true,
             }
           });
         }
-      }
+      });
+
     }, comp);
 
     return () => {
