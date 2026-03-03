@@ -112,17 +112,21 @@ export default function Home() {
 
     }, comp);
 
-    // Force a ScrollTrigger refresh after a short delay to fix navigation-based layout bugs
-    const timer = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 1000);
+    // FIX: Force a global cleanup and refresh on every visit
+    const refreshUI = () => {
+      window.scrollTo(0, 0);
+      ScrollTrigger.clearScrollMemory();
+      ScrollTrigger.refresh(true);
+    };
+
+    const timer = setTimeout(refreshUI, 1000);
 
     return () => {
       clearTimeout(timer);
       destroyed = true;
       ctx.revert();
       if (lenisInstance) lenisInstance.destroy();
-      // Ensure all triggers are cleaned up
+      // KILL ALL: Ensure no lingering pins exist when leaving
       ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, [isMounted]);
