@@ -227,3 +227,46 @@ export async function respondToBooking(
   revalidatePath("/dashboard");
   return { success: true };
 }
+
+export async function submitReview(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) return { error: "User not found" };
+
+  const listingId = formData.get("listingId") as string | null;
+  const targetUserId = formData.get("targetUserId") as string | null;
+  const ratingRaw = parseInt(formData.get("rating") as string, 10);
+  const comment = (formData.get("comment") as string)?.trim() || "";
+
+  if (isNaN(ratingRaw) || ratingRaw < 1 || ratingRaw > 5) {
+    return { error: "Rating must be between 1 and 5." };
+  }
+  const rating = ratingRaw;
+
+  if (!listingId && !targetUserId) {
+    return { error: "Review must target a listing or a user." };
+  }
+
+  if (listingId) {
+    const existing = await db.review.findFirst({
+      where: { listingId, authorId: dbUser.id },
+    });
+    if (existing) return { error: "You have already reviewed this listing." };
+  }
+
+  await db.review.create({
+    data: {
+      rating,
+      comment,
+      ...(listingId ? { listingId } : {}),
+      ...(targetUserId ? { targetUserId } : {}),
+      authorId: dbUser.id,
+    },
+  });
+
+  if (listingId) revalidatePath(`/listing/${listingId}`);
+  if (targetUserId) revalidatePath(`/creator/${targetUserId}`);
+  return { success: true };
+}

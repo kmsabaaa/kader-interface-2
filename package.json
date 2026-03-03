@@ -5,7 +5,7 @@
   "scripts": {
     "seed": "ts-node prisma/seed.ts",
     "dev": "next dev",
-    "build": "npx prisma generate && next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
+    "build": "node_modules/.bin/prisma generate && next build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public",
     "start": "node --max-old-space-size=2048 .next/standalone/server.js",
     "lint": "eslint"
   },

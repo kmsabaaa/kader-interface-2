@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -15,44 +15,36 @@ const Hero3D = dynamic(() => import("./components/Hero3D"), {
 
 export default function Home() {
   const comp = useRef<HTMLElement>(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const lenisRef = useRef<any>(null);
+  const lenisTickerRef = useRef<((time: number) => void) | null>(null);
+  const mmRef = useRef<any>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    gsap.registerPlugin(ScrollTrigger);
 
-  useEffect(() => {
-    if (!isMounted || !comp.current) return;
-    if (typeof window === "undefined") return;
-
-    // 2. Import Lenis dynamically inside useEffect
-    const initLenis = async () => {
+    const initGSAP = async () => {
+      // 2. Import Lenis dynamically inside useEffect
       const Lenis = (await import("@studio-freight/lenis")).default;
       const lenis = new Lenis({
         duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       });
 
+      const tickerFn = (time: number) => { lenis.raf(time * 1000); };
       lenis.on('scroll', ScrollTrigger.update);
-      gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+      gsap.ticker.add(tickerFn);
       gsap.ticker.lagSmoothing(0);
-      
-      return lenis;
+
+      lenisRef.current = lenis;
+      lenisTickerRef.current = tickerFn;
     };
 
-    let lenisInstance: any;
-    let destroyed = false;
-    initLenis().then(res => {
-      if (destroyed) {
-        res.destroy(); // cleanup already ran — destroy immediately
-      } else {
-        lenisInstance = res;
-      }
-    });
+    initGSAP();
 
-    gsap.registerPlugin(ScrollTrigger);
+    const mm = gsap.matchMedia();
+    mmRef.current = mm;
 
-    let ctx = gsap.context(() => {
+    const ctx = gsap.context(() => {
       // Hero Title Animation
       const revealNodes = gsap.utils.toArray(".reveal");
       if (revealNodes.length) {
@@ -87,8 +79,6 @@ export default function Home() {
       }
 
       // Horizontal Scroll (Desktop only for performance)
-      const mm = gsap.matchMedia();
-      
       mm.add("(min-width: 1024px)", () => {
         const track = document.querySelector(".horizontal-track") as HTMLElement;
         const wrapper = document.querySelector(".horizontal-wrapper") as HTMLElement;
@@ -108,31 +98,41 @@ export default function Home() {
             }
           });
         }
+
+        return () => {
+          ScrollTrigger.getAll().forEach(t => {
+            if (t.trigger === document.querySelector(".horizontal-wrapper")) {
+              t.kill();
+            }
+          });
+        };
       });
 
     }, comp);
 
-    // FIX: Force a global cleanup and refresh on every visit
-    const refreshUI = () => {
+    // Force a global cleanup and refresh on every visit
+    const timer = setTimeout(() => {
       window.scrollTo(0, 0);
       ScrollTrigger.clearScrollMemory();
       ScrollTrigger.refresh(true);
-    };
-
-    const timer = setTimeout(refreshUI, 1000);
+    }, 500);
 
     return () => {
       clearTimeout(timer);
-      destroyed = true;
-      ctx.revert();
-      if (lenisInstance) lenisInstance.destroy();
-      // KILL ALL: Ensure no lingering pins exist when leaving
+      // Kill all scroll triggers first
       ScrollTrigger.getAll().forEach(t => t.kill());
+      ScrollTrigger.clearScrollMemory();
+      // Revert matchMedia
+      if (mmRef.current) mmRef.current.revert();
+      // Revert GSAP context
+      ctx.revert();
+      // Remove Lenis ticker and destroy instance
+      if (lenisTickerRef.current) gsap.ticker.remove(lenisTickerRef.current);
+      if (lenisRef.current) lenisRef.current.destroy();
+      lenisRef.current = null;
+      lenisTickerRef.current = null;
     };
-  }, [isMounted]);
-
-  // Avoid hydration mismatch by not rendering content until mounted
-  if (!isMounted) return <div className="min-h-screen bg-[#030303]" />;
+  }, []);
 
   return (
     <>
@@ -161,7 +161,7 @@ export default function Home() {
             </h1>
             
             <p className="reveal max-w-2xl text-lg md:text-xl text-zinc-400 mb-12 font-light">
-              Kader | كادر instantly connects you with the Middle East's elite talent, cinema-grade equipment, and exclusive locations.
+              Kader | كادر instantly connects you with the Middle East&apos;s elite talent, cinema-grade equipment, and exclusive locations.
             </p>
 
             <form 
@@ -174,7 +174,6 @@ export default function Home() {
                 <input 
                   type="text" 
                   name="q"
-                  required
                   placeholder="What do you need? (e.g. ARRI Alexa, Drone Operator)" 
                   className="bg-transparent w-full text-white outline-none text-sm md:text-base" 
                 />
@@ -241,40 +240,40 @@ export default function Home() {
           </div>
         </section>
 
-        {/* HORIZONTAL FILMSTRIP (Only pinned on Desktop) */}
-        <section className="horizontal-wrapper relative md:min-h-screen bg-[#030303]">
-          <div className="lg:sticky top-0 h-auto lg:h-screen flex items-center overflow-hidden border-t border-white/5 py-24 lg:py-0">
+        {/* HORIZONTAL FILMSTRIP (Only pinned on Desktop via GSAP) */}
+        <section className="horizontal-wrapper relative bg-[#030303]">
+          <div className="h-auto lg:h-screen flex items-center border-t border-white/5 py-16 lg:py-0 overflow-hidden">
             <div className="horizontal-track flex flex-col lg:flex-row gap-8 px-6 lg:px-[10vw] w-full lg:w-max">
               <div className="w-full lg:w-[40vw] flex flex-col justify-center pr-0 lg:pr-12">
                 <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
                   The Anatomy of a <span className="text-amber-500">Masterpiece.</span>
                 </h2>
                 <p className="text-xl text-zinc-400 font-light">
-                  Kader isn't just a marketplace. It is an end-to-end ecosystem engineered to take your production from storyboard to final cut without the friction.
+                  Kader isn&apos;t just a marketplace. It is an end-to-end ecosystem engineered to take your production from storyboard to final cut without the friction.
                 </p>
               </div>
 
-              <div className="w-full lg:w-[50vw] min-h-[400px] lg:h-[60vh] bg-white/5 border border-white/10 rounded-3xl p-10 flex flex-col justify-between relative overflow-hidden group">
-                <Sparkles className="w-16 h-16 text-amber-400 mb-8" />
+              <div className="w-full lg:w-[50vw] min-h-[320px] lg:h-[60vh] bg-white/5 border border-white/10 rounded-3xl p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden group">
+                <Sparkles className="w-12 h-12 lg:w-16 lg:h-16 text-amber-400 mb-6 lg:mb-8" />
                 <div>
-                  <h3 className="text-3xl font-bold mb-4">01. AI Matchmaking</h3>
-                  <p className="text-lg text-zinc-400">Our algorithms analyze your project script and budget, matching you with specialized crew and gear.</p>
+                  <h3 className="text-2xl lg:text-3xl font-bold mb-4">01. AI Matchmaking</h3>
+                  <p className="text-base lg:text-lg text-zinc-400">Our algorithms analyze your project script and budget, matching you with specialized crew and gear.</p>
                 </div>
               </div>
 
-              <div className="w-full lg:w-[50vw] min-h-[400px] lg:h-[60vh] bg-white/5 border border-white/10 rounded-3xl p-10 flex flex-col justify-between relative overflow-hidden group">
-                <Calendar className="w-16 h-16 text-blue-400 mb-8" />
+              <div className="w-full lg:w-[50vw] min-h-[320px] lg:h-[60vh] bg-white/5 border border-white/10 rounded-3xl p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden group">
+                <Calendar className="w-12 h-12 lg:w-16 lg:h-16 text-blue-400 mb-6 lg:mb-8" />
                 <div>
-                  <h3 className="text-3xl font-bold mb-4">02. Mission Control</h3>
-                  <p className="text-lg text-zinc-400">Generate digital call sheets and track dynamic budgets through a unified dashboard.</p>
+                  <h3 className="text-2xl lg:text-3xl font-bold mb-4">02. Mission Control</h3>
+                  <p className="text-base lg:text-lg text-zinc-400">Generate digital call sheets and track dynamic budgets through a unified dashboard.</p>
                 </div>
               </div>
 
-              <div className="w-full lg:w-[50vw] min-h-[400px] lg:h-[60vh] bg-white/5 border border-white/10 rounded-3xl p-10 flex flex-col justify-between relative overflow-hidden group">
-                <ShieldCheck className="w-16 h-16 text-emerald-400 mb-8" />
+              <div className="w-full lg:w-[50vw] min-h-[320px] lg:h-[60vh] bg-white/5 border border-white/10 rounded-3xl p-8 lg:p-10 flex flex-col justify-between relative overflow-hidden group">
+                <ShieldCheck className="w-12 h-12 lg:w-16 lg:h-16 text-emerald-400 mb-6 lg:mb-8" />
                 <div>
-                  <h3 className="text-3xl font-bold mb-4">03. Secure Vault</h3>
-                  <p className="text-lg text-zinc-400">Every equipment rental is backed by insurance. Payments are held securely in escrow.</p>
+                  <h3 className="text-2xl lg:text-3xl font-bold mb-4">03. Secure Vault</h3>
+                  <p className="text-base lg:text-lg text-zinc-400">Every equipment rental is backed by insurance. Payments are held securely in escrow.</p>
                 </div>
               </div>
             </div>
