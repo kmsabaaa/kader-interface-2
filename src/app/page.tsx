@@ -91,18 +91,19 @@ export default function Home() {
       
       mm.add("(min-width: 1024px)", () => {
         const track = document.querySelector(".horizontal-track") as HTMLElement;
-        if (track) {
+        const wrapper = document.querySelector(".horizontal-wrapper") as HTMLElement;
+        if (track && wrapper) {
           gsap.to(track, {
             x: () => -(track.scrollWidth - window.innerWidth),
             ease: "none",
             scrollTrigger: {
-              trigger: ".horizontal-wrapper",
+              trigger: wrapper,
               start: "top top",
               end: () => `+=${track.scrollWidth}`,
               scrub: 1,
               pin: true,
+              anticipatePin: 1,
               invalidateOnRefresh: true,
-              // Kill and refresh scroll trigger on refresh to fix navigation bugs
               refreshPriority: 1
             }
           });
@@ -114,7 +115,7 @@ export default function Home() {
     // Force a ScrollTrigger refresh after a short delay to fix navigation-based layout bugs
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 500);
+    }, 1000);
 
     return () => {
       clearTimeout(timer);
