@@ -11,8 +11,8 @@ import QuickActions from "./QuickActions";
 import ProjectsHub from "./ProjectsHub";
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const resolvedParams = await searchParams;
-  const currentTab = resolvedParams?.tab || "overview";
+  const searchParamsValue = await searchParams;
+  const currentTab = searchParamsValue?.tab || "overview";
 
   const { userId } = await auth();
   if (!userId) redirect("/");
@@ -34,14 +34,40 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       : "flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl font-medium transition-colors";
   };
 
+  console.log("Current Tab:", currentTab);
+
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row">
       <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0a] sticky top-0 z-50">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-bold text-black">K</div>
-          <span className="font-bold tracking-tight">Mission Control</span>
-        </Link>
-        <UserButton />
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-bold text-black">K</div>
+            <span className="font-bold tracking-tight">Mission Control</span>
+          </Link>
+        </div>
+        <div className="flex items-center gap-4">
+          <RoleSwitch isProvider={isProvider} />
+          <UserButton />
+        </div>
+      </div>
+      
+      {/* Mobile Tab Bar */}
+      <div className="md:hidden flex overflow-x-auto border-b border-white/5 bg-[#0a0a0a] sticky top-[65px] z-40 no-scrollbar">
+         <nav className="flex px-4 py-2 gap-2">
+            <Link href="/dashboard?tab=overview" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'overview' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Overview</Link>
+            {isProvider ? (
+              <>
+                <Link href="/dashboard?tab=inventory" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'inventory' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Inventory</Link>
+                <Link href="/dashboard?tab=calendar" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'calendar' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Schedule</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/dashboard?tab=projects" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'projects' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Projects</Link>
+                <Link href="/dashboard?tab=saved" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'saved' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Saved</Link>
+              </>
+            )}
+            <Link href="/dashboard?tab=settings" scroll={false} className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold ${currentTab === 'settings' ? 'bg-amber-500 text-black' : 'text-zinc-500 bg-white/5'}`}>Settings</Link>
+         </nav>
       </div>
 
       <aside className="w-full md:w-72 border-r border-white/5 bg-[#0a0a0a] flex flex-col shrink-0 md:h-screen sticky top-0 z-20">
@@ -51,24 +77,24 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         </div>
         <nav className="flex-1 px-4 flex flex-col gap-1.5 md:mt-2 pb-6">
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-4">Personal</p>
-          <Link href="/dashboard?tab=overview" className={getTabClass("overview")}><LayoutGrid className="w-5 h-5" /> Overview</Link>
+          <Link href="/dashboard?tab=overview" scroll={false} className={getTabClass("overview")}><LayoutGrid className="w-5 h-5" /> Overview</Link>
           {!isProvider ? (
             <>
-              <Link href="/dashboard?tab=projects" className={getTabClass("projects")}><Film className="w-5 h-5" /> My Projects</Link>
-              <Link href="/dashboard?tab=saved" className={getTabClass("saved")}><Bookmark className="w-5 h-5" /> Saved Items</Link>
+              <Link href="/dashboard?tab=projects" scroll={false} className={getTabClass("projects")}><Film className="w-5 h-5" /> My Projects</Link>
+              <Link href="/dashboard?tab=saved" scroll={false} className={getTabClass("saved")}><Bookmark className="w-5 h-5" /> Saved Items</Link>
             </>
           ) : (
             <>
-              <Link href="/dashboard?tab=inventory" className={getTabClass("inventory")}><Briefcase className="w-5 h-5" /> My Inventory</Link>
-              <Link href="/dashboard?tab=calendar" className={getTabClass("calendar")}><Calendar className="w-5 h-5" /> Schedule</Link>
+              <Link href="/dashboard?tab=inventory" scroll={false} className={getTabClass("inventory")}><Briefcase className="w-5 h-5" /> My Inventory</Link>
+              <Link href="/dashboard?tab=calendar" scroll={false} className={getTabClass("calendar")}><Calendar className="w-5 h-5" /> Schedule</Link>
             </>
           )}
           <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-8">Identity</p>
-          <Link href="/dashboard?tab=settings" className={getTabClass("settings")}><UserCircle className="w-5 h-5" /> Profile Hub</Link>
+          <Link href="/dashboard?tab=settings" scroll={false} className={getTabClass("settings")}><UserCircle className="w-5 h-5" /> Profile Hub</Link>
           {isAdmin && (
             <>
               <p className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-2 mt-8 text-blue-500">Kader Admin</p>
-              <Link href="/dashboard?tab=admin" className={getTabClass("admin")}><ShieldCheck className="w-5 h-5 text-blue-500" /> Control Center</Link>
+              <Link href="/dashboard?tab=admin" scroll={false} className={getTabClass("admin")}><ShieldCheck className="w-5 h-5 text-blue-500" /> Control Center</Link>
             </>
           )}
         </nav>
@@ -88,7 +114,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
         <div className="p-6 md:p-12 max-w-7xl mx-auto w-full">
           {currentTab === "overview" && (
-            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div key="overview" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
                <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-12">Welcome, {user?.firstName}.</h1>
                <QuickActions isProvider={isProvider} />
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -103,22 +129,22 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                </div>
             </div>
           )}
-          {currentTab === "settings" && <ProfileSettings user={dbUser} />}
-          {currentTab === "inventory" && <InventoryHub listings={dbUser.listings} />}
-          {currentTab === "projects" && <ProjectsHub projects={dbUser.projects} />}
+          {currentTab === "settings" && <div key="settings"><ProfileSettings user={dbUser} /></div>}
+          {currentTab === "inventory" && <div key="inventory"><InventoryHub listings={dbUser.listings} /></div>}
+          {currentTab === "projects" && <div key="projects"><ProjectsHub projects={dbUser.projects} /></div>}
           {currentTab === "saved" && (
-            <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
+            <div key="saved" className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
                <Bookmark className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Your library is currently empty</p>
             </div>
           )}
           {currentTab === "calendar" && (
-            <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
+            <div key="calendar" className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
                <Calendar className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No upcoming shoots scheduled</p>
             </div>
           )}
-          {currentTab === "admin" && isAdmin && <div className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>}
+          {currentTab === "admin" && isAdmin && <div key="admin" className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>}
         </div>
       </main>
     </div>

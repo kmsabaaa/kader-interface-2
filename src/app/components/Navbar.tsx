@@ -27,6 +27,7 @@ export default function Navbar() {
   });
 
   if (pathname?.startsWith("/dashboard")) return null;
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <>
