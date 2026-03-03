@@ -102,6 +102,8 @@ export default function Home() {
               scrub: 1,
               pin: true,
               invalidateOnRefresh: true,
+              // Kill and refresh scroll trigger on refresh to fix navigation bugs
+              refreshPriority: 1
             }
           });
         }
@@ -109,10 +111,18 @@ export default function Home() {
 
     }, comp);
 
+    // Force a ScrollTrigger refresh after a short delay to fix navigation-based layout bugs
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 500);
+
     return () => {
+      clearTimeout(timer);
       destroyed = true;
       ctx.revert();
       if (lenisInstance) lenisInstance.destroy();
+      // Ensure all triggers are cleaned up
+      ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, [isMounted]);
 
