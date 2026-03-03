@@ -219,5 +219,6 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
         </div>
       </div>
     </div>
+  </div>
   );
 }
