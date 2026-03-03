@@ -35,14 +35,43 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
       : "flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl font-medium transition-colors";
   };
 
+  // 3. Fallback Content Logic
+  let content = (
+    <div key="overview" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+       <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-12">Welcome, {user?.firstName}.</h1>
+       <QuickActions isProvider={isProvider} />
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
+             <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">{isProvider ? "MARKET INVENTORY" : "LIVE PRODUCTIONS"}</h3>
+             <p className="text-6xl font-black">{isProvider ? (dbUser.listings?.length || 0) : (dbUser.projects?.length || 0)}</p>
+          </div>
+          <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
+             <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">ESCROW BALANCE</h3>
+             <p className="text-6xl font-black text-emerald-400">0.00 <span className="text-sm text-zinc-600 font-bold uppercase tracking-tighter">BHD</span></p>
+          </div>
+       </div>
+    </div>
+  );
+
+  if (currentTab === "settings") content = <ProfileSettings user={dbUser} />;
+  if (currentTab === "inventory") content = <InventoryHub listings={dbUser.listings || []} />;
+  if (currentTab === "projects") content = <ProjectsHub projects={dbUser.projects || []} />;
+  if (currentTab === "saved") content = (
+    <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
+       <Bookmark className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+       <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Your library is currently empty</p>
+    </div>
+  );
+  if (currentTab === "calendar") content = (
+    <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
+       <Calendar className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+       <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No upcoming shoots scheduled</p>
+    </div>
+  );
+  if (currentTab === "admin" && isAdmin) content = <div className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>;
+
   return (
     <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row">
-      {/* 
-        DEBUG STATUS:
-        User Role: {dbUser.role}
-        Current Tab: {currentTab}
-        Is Provider: {isProvider ? "YES" : "NO"}
-      */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0a] sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
@@ -118,47 +147,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
         </header>
 
         <div className="p-6 md:p-12 max-w-7xl mx-auto w-full">
-          {/* Debugging: {currentTab} */}
-          {currentTab === "overview" && (
-            <div key="overview" className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-               <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-12">Welcome, {user?.firstName}.</h1>
-               <QuickActions isProvider={isProvider} />
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
-                     <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">{isProvider ? "MARKET INVENTORY" : "LIVE PRODUCTIONS"}</h3>
-                     <p className="text-6xl font-black">{isProvider ? (dbUser.listings?.length || 0) : (dbUser.projects?.length || 0)}</p>
-                  </div>
-                  <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] p-10 relative overflow-hidden group">
-                     <h3 className="text-zinc-500 text-xs font-black uppercase tracking-[0.2em] mb-3">ESCROW BALANCE</h3>
-                     <p className="text-6xl font-black text-emerald-400">0.00 <span className="text-sm text-zinc-600 font-bold uppercase tracking-tighter">BHD</span></p>
-                  </div>
-               </div>
-            </div>
-          )}
-          {currentTab === "settings" && <div key="settings"><ProfileSettings user={dbUser} /></div>}
-          {currentTab === "inventory" && <div key="inventory"><InventoryHub listings={dbUser.listings || []} /></div>}
-          {currentTab === "projects" && <div key="projects"><ProjectsHub projects={dbUser.projects || []} /></div>}
-          {currentTab === "saved" && (
-            <div key="saved" className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
-               <Bookmark className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-               <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Your library is currently empty</p>
-            </div>
-          )}
-          {currentTab === "calendar" && (
-            <div key="calendar" className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem]">
-               <Calendar className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-               <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No upcoming shoots scheduled</p>
-            </div>
-          )}
-          {currentTab === "admin" && isAdmin && <div key="admin" className="py-24 text-center border border-dashed border-blue-500/20 rounded-[2.5rem]">Kader HQ Engine Loading...</div>}
-          
-          {/* CATCH-ALL: If currentTab is invalid or doesn't match above */}
-          {!["overview", "settings", "inventory", "projects", "saved", "calendar", "admin"].includes(currentTab) && (
-            <div className="py-24 text-center">
-              <p className="text-zinc-500">Redirecting to Overview...</p>
-              {/* Force redirect in client-side or just show overview */}
-            </div>
-          )}
+          {content}
         </div>
       </main>
     </div>
