@@ -1,11 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { Camera, MapPin, Eye, EyeOff, Trash2, Edit3, MoreVertical, Plus } from 'lucide-react';
+import { Camera, MapPin, Trash2, Edit3, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import NewListingModal from './NewListingModal';
+import { deleteListing } from './actions';
 
 export default function InventoryHub({ listings }: { listings: any[] }) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this listing? This action cannot be undone.')) return;
+    setDeletingId(id);
+    try {
+      await deleteListing(id);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
@@ -63,8 +76,11 @@ export default function InventoryHub({ listings }: { listings: any[] }) {
                    <button className="flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold transition-all border border-white/5">
                       <Edit3 className="w-3.5 h-3.5" /> Edit
                    </button>
-                   <button className="flex items-center justify-center gap-2 py-2.5 bg-red-500/5 hover:bg-red-500/10 rounded-xl text-xs font-bold text-red-500 transition-all border border-red-500/10">
-                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                   <button
+                      onClick={() => handleDelete(item.id)}
+                      disabled={deletingId === item.id}
+                      className="flex items-center justify-center gap-2 py-2.5 bg-red-500/5 hover:bg-red-500/10 rounded-xl text-xs font-bold text-red-500 transition-all border border-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                      <Trash2 className="w-3.5 h-3.5" /> {deletingId === item.id ? 'Deleting...' : 'Delete'}
                    </button>
                 </div>
               </div>

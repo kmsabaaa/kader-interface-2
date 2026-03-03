@@ -55,6 +55,7 @@ model User {
   location     String?   
   instagram    String?
   linkedin     String?
+  website      String?
   profileImage String?
 
   // Relationships
