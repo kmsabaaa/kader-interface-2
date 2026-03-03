@@ -29,13 +29,20 @@ export default async function Dashboard(props: { searchParams: Promise<{ tab?: s
   const isAdmin = userId === "user_3AISoqNWAgFtVmrDkNNht2tYeyB"; 
 
   const getTabClass = (tabName: string) => {
-    return currentTab === tabName
+    const isActive = currentTab === tabName;
+    return isActive
       ? "flex items-center gap-3 px-4 py-3 bg-amber-500 text-black rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20"
       : "flex items-center gap-3 px-4 py-3 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl font-medium transition-colors";
   };
 
   return (
-    <div key={currentTab} className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#030303] text-white flex flex-col md:flex-row">
+      {/* 
+        DEBUG STATUS:
+        User Role: {dbUser.role}
+        Current Tab: {currentTab}
+        Is Provider: {isProvider ? "YES" : "NO"}
+      */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#0a0a0a] sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
