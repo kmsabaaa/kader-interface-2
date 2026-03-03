@@ -1,10 +1,13 @@
 'use client';
 
-import { Film, Calendar, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Film, ChevronRight, Clock } from 'lucide-react';
 import Link from 'next/link';
 import NewProjectModal from './NewProjectModal';
 
 export default function ProjectsHub({ projects }: { projects: any[] }) {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
@@ -13,7 +16,7 @@ export default function ProjectsHub({ projects }: { projects: any[] }) {
           <h2 className="text-2xl font-bold text-white">Your Productions</h2>
           <p className="text-zinc-500 text-sm font-medium">Manage your project sets and resource bookings.</p>
         </div>
-        <NewProjectModal />
+        <NewProjectModal isOpen={modalOpen} onOpenChange={setModalOpen} />
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -21,7 +24,7 @@ export default function ProjectsHub({ projects }: { projects: any[] }) {
           <div className="py-24 text-center border border-dashed border-white/10 rounded-[2rem] bg-white/[0.02]">
             <Film className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
             <p className="text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs">No active productions found</p>
-            <button className="mt-6 text-blue-400 font-bold text-sm hover:underline">Create your first project folder</button>
+            <button className="mt-6 text-blue-400 font-bold text-sm hover:underline" onClick={() => setModalOpen(true)}>Create your first project folder</button>
           </div>
         ) : (
           projects.map((project) => (

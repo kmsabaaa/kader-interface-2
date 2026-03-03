@@ -124,3 +124,47 @@ export async function createNewListing(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/search");
 }
+
+export async function createNewService(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) throw new Error("User not found");
+
+  const title = formData.get("title") as string;
+  const description = formData.get("description") as string;
+  const pricePerDay = parseFloat(formData.get("pricePerDay") as string);
+
+  if (!title || !description || isNaN(pricePerDay) || pricePerDay < 0) {
+    throw new Error("Invalid service data. Please fill in all required fields.");
+  }
+
+  await db.service.create({
+    data: {
+      title,
+      description,
+      pricePerDay,
+      userId: dbUser.id,
+    }
+  });
+
+  revalidatePath("/dashboard");
+}
+
+export async function deleteListing(listingId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) throw new Error("User not found");
+
+  const listing = await db.listing.findUnique({ where: { id: listingId } });
+  if (!listing) throw new Error("Listing not found");
+  if (listing.userId !== dbUser.id) throw new Error("You do not own this listing");
+
+  await db.listing.delete({ where: { id: listingId } });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/search");
+}

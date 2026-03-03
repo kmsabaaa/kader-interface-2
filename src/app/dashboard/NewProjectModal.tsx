@@ -6,8 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Film, AlertCircle } from "lucide-react";
 import { createNewProject } from "./actions";
 
-export default function NewProjectModal() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function NewProjectModal({ isOpen: controlledOpen, onOpenChange }: { isOpen?: boolean; onOpenChange?: (open: boolean) => void } = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = (val: boolean) => {
+    if (onOpenChange) onOpenChange(val);
+    setInternalOpen(val);
+  };
   
   const [state, formAction, isPending] = useActionState(
     createNewProject as any,
