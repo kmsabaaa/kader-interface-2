@@ -270,3 +270,21 @@ export async function submitReview(formData: FormData) {
   if (targetUserId) revalidatePath(`/creator/${targetUserId}`);
   return { success: true };
 }
+
+// ── TEST FUNDS (development / testing only) ───────────────────────────────────
+export async function addTestFunds(amount: number = 100) {
+  const { userId } = await auth();
+  if (!userId) return { error: "Unauthorized" };
+
+  const dbUser = await db.user.findUnique({ where: { clerkId: userId } });
+  if (!dbUser) return { error: "User not found" };
+
+  const updated = await db.user.update({
+    where: { clerkId: userId },
+    data: { walletBalance: { increment: amount } },
+    select: { walletBalance: true },
+  });
+
+  revalidatePath("/dashboard");
+  return { success: true, newBalance: updated.walletBalance };
+}

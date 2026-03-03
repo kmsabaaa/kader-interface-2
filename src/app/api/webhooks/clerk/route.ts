@@ -29,10 +29,14 @@ export async function POST(req: Request) {
   const eventType = evt.type
   
   if (eventType === 'user.created' || eventType === 'user.updated') {
+    const data = evt.data as any;
+    const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || null;
+    const email = data.email_addresses?.[0]?.email_address ?? null;
+
     await db.user.upsert({
       where: { clerkId: id },
-      update: {},
-      create: { clerkId: id as string, role: "CONSUMER" },
+      update: { name, email },
+      create: { clerkId: id as string, role: "CONSUMER", name, email },
     })
   }
   if (eventType === 'user.deleted') {

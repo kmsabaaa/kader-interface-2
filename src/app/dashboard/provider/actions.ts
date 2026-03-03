@@ -4,9 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "../../../lib/db";
 import { revalidatePath } from "next/cache";
 
+const PROVIDER_REVENUE_SHARE = 0.9; // 90% to provider after 10% platform fee
+
 /**
- * UPDATES A REQUEST STATUS (APPROVE / DENY)
+ * UPDATES A REQUEST STATUS (APPROVE / DENY / COMPLETE)
  * Called from the Provider Dashboard to manage incoming gear/talent requests.
+ * When marking COMPLETED, the provider's wallet is credited (90% of totalCost).
  */
 export async function updateRequestStatus(
   requestId: string,
@@ -43,9 +46,24 @@ export async function updateRequestStatus(
       data: { status: newStatus }
     });
 
-    // 5. Refresh the dashboards
+    // 5. If COMPLETED, credit the provider's wallet (90% of total cost)
+    if (newStatus === "COMPLETED" && request.totalCost > 0) {
+      const providerShare = request.totalCost * PROVIDER_REVENUE_SHARE;
+      await db.user.update({
+        where: { id: dbUser.id },
+        data: { walletBalance: { increment: providerShare } }
+      });
+
+      // Also update the associated transaction if it exists
+      await db.transaction.updateMany({
+        where: { callSheetItemId: requestId },
+        data: { status: "COMPLETED" }
+      });
+    }
+
+    // 6. Refresh the dashboards
+    revalidatePath("/dashboard");
     revalidatePath("/dashboard/provider");
-    revalidatePath("/dashboard/mission-control");
 
     return { success: true };
 
